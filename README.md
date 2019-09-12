@@ -6,7 +6,7 @@
 I am [Alhan Keser](https://blog.alhan.co/), a [10+ year specialist in Web Experimentation](https://www.linkedin.com/in/alhankeser/) (aka A/B Testing, Conversion Optimization), on my way to a Master's in Data Science.
 
 ### What:
-This is an original analysis of Citi Bike station data from May-June 2019 to find out what affect the day of week, time of day, and weather (temperature, precipitation, etc...) have on the availability of bikes at station-,  neighborhood-, and borough-level. 
+This is an original analysis of Citi Bike station data from May-June 2019 to find out what affect the day of week, time of day, and weather (temperature, precipitation, etc...) have on the availability of bikes at station-,  neighborhood-, and borough-levels. 
 
 ### Why:
 - I wanted to push myself to extract and transform my own data. Skipping the entire ETL process and going straight into analysis is a luxury: it does not reflect reality. 
@@ -18,26 +18,27 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
     - [Citi Bike Live Station Status](https://feeds.citibikenyc.com/stations/stations.json)
     - [Dark Sky Weather API](https://darksky.net/dev/docs)
     - [Google Geocoding API](https://developers.google.com/maps/documentation/geocoding/intro)
-- **Created chron jobs** to collect Citi Bike station statuses for all ~858 station, every 3 minutes, for ~2 months.
+- **Created cron jobs** to collect Citi Bike station statuses for all ~858 station, every 3 minutes, for ~2 months.
     - Total rows in final table: 5,800,274
     - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Oops! 
 - **Created a mini-ETL process** to transform data into the final output used below. 
     - Along the way, there were many errors, some of which I will resolve here.
 
 ### Table of Contents
+- [Packages](#Packages)
 - [Extracting](#Extracting)
     - [Stations](#Stations)
     - [Geocoding](#Geocoding)
     - [Weather](#Weather)
-    - [Chron Jobs](#Chron-Jobs)
+    - [Cron Jobs](#Cron-Jobs)
 - [Transforming](#Transforming)
     - [Availability by Station](#Availability-by-Station)
     - [Predicted vs Observed Weather](#Predicted-vs-Observed-Weather)
 
+### Packages
+
 
 ```python
-"""Import libraries necessary to data cleaning and analysis. 
-"""
 import pandas as pd
 import warnings
 warnings.filterwarnings('ignore')
@@ -163,7 +164,7 @@ df.shape
 
 #### Weather
 
-#### Chron Jobs
+#### Cron Jobs
 
 ### Transforming
 
@@ -179,5 +180,5 @@ df.shape
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 7316 bytes to ../analysis.md
+    [NbConvertApp] Writing 5518 bytes to ../README.md
 
