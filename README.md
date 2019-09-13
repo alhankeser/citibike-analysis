@@ -36,17 +36,61 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
     - [Predicted vs Observed Weather](#Predicted-vs-Observed-Weather)
 
 ### Packages
+Importing a few packages that will help with describing, cleaning and visualizing things. 
 
 
 ```python
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import random
 import warnings
 warnings.filterwarnings('ignore')
 ```
 
 ### Extracting
+I started by find an interesting data source. In this case, I found the [Citi Bike Station Feed](https://feeds.citibikenyc.com/stations/stations.json) via the [NYC Open Data site](https://opendata.cityofnewyork.us/).
+
+The feed shows the latest statuses of ~858 Citi Bike stations. Below is a list of values per station and sample data for each. Any keys left blank are often blank in the data source as well, which I'll address in later steps. 
+
+| key | sample value |
+|:------------|:---------:|
+| `id`        | 285|
+| `stationName` |"Broadway & E 14St"|
+| `availableDocks` |20|
+| `totalDocks` |53|
+| `latitude`|40.73454567|
+| `longitude`   |-73.99074142|
+| `statusValue` |"In Service"|
+| `statusKey`   |1|
+| `availableBikes` |31|
+| `stAddress1`  |"Broadway & E 14 St"|
+| `stAddress2`  |""|
+| `city`        |""|
+| `postalCode`  |""|
+| `location`    |""|
+| `altitude`    |""|
+| `testStation` |false|
+| `lastCommunicationTime` |"2019-09-12 08:38:21 PM"|
+| `landMark`    |""|
 
 #### Stations
+
+To capture the raw station data without any transformations, I created a simple table that stored the following: 
+
+|column_name|data_type|
+|-----------|---------|
+|created_at|timestamp|
+|data|json|
+
+Once the table created, I needed a way to collect data. A quick solution -- for me -- was to create a [Laravel](https://laravel.com/) application that [makes it easy to run console commands](https://laravel.com/docs/5.8/artisan#writing-commands). In combination with [Laravel Forge](https://forge.laravel.com), it's easy to set up cron jobs that trigger the necessary commands at set intervals.
+
+**Resources**:
+- [See the Laravel application I created to query station data](https://github.com/alhankeser/citibike-tracker/). 
+- [See the request that extracts data for the base table](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49)
+
+Once the commands created, I set up a cron job that ran once every 3 minutes. This resulted in the collection of 41,325 rows. Below I've done a quick analysis of the base table:
 
 
 ```python
@@ -55,90 +99,28 @@ stations_raw = pd.read_csv("../input/stations_raw.csv") # 16.49 GB output from b
 
 
 ```python
-stations_raw.shape
+print('---Sample Row---')
+print(stations_raw.iloc[random.randint(0,len(stations_raw))])
+print('\n---Info---')
+print(stations_raw.info())
 ```
 
-
-
-
-    (41325, 3)
-
-
-
-
-```python
-stations_raw.iloc[1000:1005,:]
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>id</th>
-      <th>data</th>
-      <th>created_at</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1000</th>
-      <td>1001</td>
-      <td>{"executionTime": "2019-05-02 03:07:52 PM", "s...</td>
-      <td>2019-05-02 15:08:01</td>
-    </tr>
-    <tr>
-      <th>1001</th>
-      <td>1002</td>
-      <td>{"executionTime": "2019-05-02 03:08:57 PM", "s...</td>
-      <td>2019-05-02 15:09:02</td>
-    </tr>
-    <tr>
-      <th>1002</th>
-      <td>1003</td>
-      <td>{"executionTime": "2019-05-02 03:09:51 PM", "s...</td>
-      <td>2019-05-02 15:10:01</td>
-    </tr>
-    <tr>
-      <th>1003</th>
-      <td>1004</td>
-      <td>{"executionTime": "2019-05-02 03:10:55 PM", "s...</td>
-      <td>2019-05-02 15:11:01</td>
-    </tr>
-    <tr>
-      <th>1004</th>
-      <td>1005</td>
-      <td>{"executionTime": "2019-05-02 03:12:00 PM", "s...</td>
-      <td>2019-05-02 15:12:02</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-print(stations_raw.iloc[1000]['data'][:1000] + '...')
-```
-
-    {"executionTime": "2019-05-02 03:07:52 PM", "stationBeanList": [{"id": 168, "city": "", "altitude": "", "landMark": "", "latitude": 40.73971301, "location": "", "longitude": -73.99456405, "statusKey": 1, "postalCode": "", "stAddress1": "W 18 St & 6 Ave", "stAddress2": "", "totalDocks": 47, "stationName": "W 18 St & 6 Ave", "statusValue": "In Service", "testStation": false, "availableBikes": 14, "availableDocks": 31, "lastCommunicationTime": "2019-05-02 03:06:26 PM"}, {"id": 281, "city": "", "altitude": "", "landMark": "", "latitude": 40.7643971, "location": "", "longitude": -73.97371465, "statusKey": 1, "postalCode": "", "stAddress1": "Grand Army Plaza & Central Park S", "stAddress2": "", "totalDocks": 66, "stationName": "Grand Army Plaza & Central Park S", "statusValue": "In Service", "testStation": false, "availableBikes": 5, "availableDocks": 58, "lastCommunicationTime": "2019-05-02 03:05:15 PM"}, {"id": 285, "city": "", "altitude": "", "landMark": "", "latitude": 40.73454567, "loca...
+    ---Sample Row---
+    id                                                        31419
+    data          {"executionTime": "2019-06-22 01:53:41 PM", "s...
+    created_at                                  2019-06-22 13:54:01
+    Name: 31418, dtype: object
+    
+    ---Info---
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 41325 entries, 0 to 41324
+    Data columns (total 3 columns):
+    id            41325 non-null int64
+    data          41325 non-null object
+    created_at    41325 non-null object
+    dtypes: int64(1), object(2)
+    memory usage: 968.6+ KB
+    None
 
 
 
@@ -172,13 +154,13 @@ df.shape
 
 #### Predicted vs Observed Weather
 
+#### Auto-Generate README.md
+
 
 ```python
-"""Creates README.md file for a better GitHub reading experience. 
-"""
 !jupyter nbconvert --output-dir='..' --to markdown analysis.ipynb --output README.md
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 5518 bytes to ../README.md
+    [NbConvertApp] Writing 5901 bytes to ../README.md
 
