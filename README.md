@@ -28,8 +28,8 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
 ### Table of Contents
 - [Packages](#Packages)
 - [Extracting](#Extracting)
-    - [Stations(Raw)](#Stations-Raw)
-    - [Stations(Flat)](#Stations-(Flat\))
+    - [Stations-Raw](#Stations-Raw)
+    - [Stations-Flat](#Stations-Flat)
     - [Geocoding](#Geocoding)
     - [Weather](#Weather)
     - [Cron Jobs](#Cron-Jobs)
@@ -129,5 +129,5 @@ View the code behind each command:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 5979 bytes to ../README.md
+    [NbConvertApp] Writing 6024 bytes to ../README.md
 
