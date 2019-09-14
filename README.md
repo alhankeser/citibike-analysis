@@ -21,13 +21,15 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
 - **Created cron jobs** to collect Citi Bike station statuses for all ~858 station, every 3 minutes, for ~2 months.
     - Total rows in final table: 5,800,274
     - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Oops! 
+![My server crashed July 14](../assets/server-crash.jpg)
 - **Created a mini-ETL process** to transform data into the final output used below. 
     - Along the way, there were many errors, some of which I will resolve here.
 
 ### Table of Contents
 - [Packages](#Packages)
 - [Extracting](#Extracting)
-    - [Stations](#Stations)
+    - [Stations(Raw)](#Stations-Raw)
+    - [Stations(Flat)](#Stations-(Flat\))
     - [Geocoding](#Geocoding)
     - [Weather](#Weather)
     - [Cron Jobs](#Cron-Jobs)
@@ -75,7 +77,7 @@ The feed shows the latest statuses of ~858 Citi Bike stations. Below is a list o
 | `lastCommunicationTime` |"2019-09-12 08:38:21 PM"|
 | `landMark`    |""|
 
-#### Stations
+#### Stations-Raw
 
 To capture the raw station data without any transformations, I created a simple table that stored the following: 
 
@@ -84,69 +86,34 @@ To capture the raw station data without any transformations, I created a simple 
 |created_at|timestamp|
 |data|json|
 
-Once the table created, I needed a way to collect data. A quick solution -- for me -- was to create a [Laravel](https://laravel.com/) application that [makes it easy to run console commands](https://laravel.com/docs/5.8/artisan#writing-commands). In combination with [Laravel Forge](https://forge.laravel.com), it's easy to set up cron jobs that trigger the necessary commands at set intervals.
+Once the table created, I needed a way to collect data. A quick solution -- for me -- was to create [a Laravel application](https://github.com/alhankeser/citibike-tracker/)  that [makes it easy create console commands](https://laravel.com/docs/5.8/artisan#writing-commands). In combination with [Laravel Forge](https://forge.laravel.com), it's easy to set up a cron job that triggers [the necessary command](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49) at set intervals.
 
-**Resources**:
-- [See the Laravel application I created to query station data](https://github.com/alhankeser/citibike-tracker/). 
-- [See the request that extracts data for the base table](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49)
+Once the commands created, I set up a [cron job](#Cron-Jobs) that ran once every 3 minutes. This resulted in the collection of 41,325 rows. Below I've provided a quick idea of what this base table looks like:
 
-Once the commands created, I set up a cron job that ran once every 3 minutes. This resulted in the collection of 41,325 rows. Below I've done a quick analysis of the base table:
+|column_name|sample value|
+|----------:|:-----------|
+|id         |                                               31419|
+|data       |  {"executionTime": "2019-06-22 01:53:41 PM", "s...|
+|created_at |                                 2019-06-22 13:54:01|
 
-
-```python
-stations_raw = pd.read_csv("../input/stations_raw.csv") # 16.49 GB output from base SQL table
-```
-
-
-```python
-print('---Sample Row---')
-print(stations_raw.iloc[random.randint(0,len(stations_raw))])
-print('\n---Info---')
-print(stations_raw.info())
-```
-
-    ---Sample Row---
-    id                                                        31419
-    data          {"executionTime": "2019-06-22 01:53:41 PM", "s...
-    created_at                                  2019-06-22 13:54:01
-    Name: 31418, dtype: object
-    
-    ---Info---
-    <class 'pandas.core.frame.DataFrame'>
-    RangeIndex: 41325 entries, 0 to 41324
-    Data columns (total 3 columns):
-    id            41325 non-null int64
-    data          41325 non-null object
-    created_at    41325 non-null object
-    dtypes: int64(1), object(2)
-    memory usage: 968.6+ KB
-    None
-
-
-
-```python
-"""Create pandas DataFrame with flat "availability" table. 
-"""
-df = pd.read_csv("../input/availability_sep2_2019.csv")
-```
-
-
-```python
-df.shape
-```
-
-
-
-
-    (5800274, 21)
-
-
+#### Stations-Flat
 
 #### Geocoding
 
 #### Weather
 
 #### Cron Jobs
+I'm not going to spend a lot of time on discussing cron jobs, but here are the patterns I was using to run everything. There is probably a more optimal approach that I am not aware of. 
+
+|Cron       |Command|
+|-----------|-------|
+|\*/3 \* \* \* \* | get:docks && update:availability 0 && update:weather|
+|0 \*/2 \* \* \*  | get:weather 0|
+
+View the code behind each command:
+- `get:docks` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49)
+- `update:availability` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L179)
+- `update:weather` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L359)
 
 ### Transforming
 
@@ -162,5 +129,5 @@ df.shape
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 5901 bytes to ../README.md
+    [NbConvertApp] Writing 5979 bytes to ../README.md
 
