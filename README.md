@@ -21,7 +21,7 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
 - **Created cron jobs** to collect Citi Bike station statuses for all ~858 station, every 3 minutes, for ~2 months.
     - Total rows in final table: 5,800,274
     - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Oops! 
-![My server crashed July 14](../assets/server-crash.jpg)
+![My server crashed July 14](https://blog.alhan.co/storage/images/posts/2/web-server-crashed_2_1568434613_sm.jpg)
 - **Created a mini-ETL process** to transform data into the final output used below. 
     - Along the way, there were many errors, some of which I will resolve here.
 
@@ -129,5 +129,5 @@ View the code behind each command:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 6024 bytes to ../README.md
+    [NbConvertApp] Writing 6019 bytes to ../README.md
 
