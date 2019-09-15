@@ -18,7 +18,7 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
     - [Citi Bike Live Station Status](https://feeds.citibikenyc.com/stations/stations.json)
     - [Dark Sky Weather API](https://darksky.net/dev/docs)
     - [Google Geocoding API](https://developers.google.com/maps/documentation/geocoding/intro)
-- **Created cron jobs** to collect Citi Bike station statuses for all ~858 station, every 3 minutes, for ~2 months.
+- **Created cron jobs** to collect Citi Bike station statuses for all ~858 stations, every 3 minutes, for ~2 months.
     - Total rows in final table: 5,800,274
     - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Oops! 
 ![My server crashed July 14](https://blog.alhan.co/storage/images/posts/2/web-server-crashed_2_1568434613_sm.jpg)
@@ -57,7 +57,7 @@ I started by find an interesting data source. In this case, I found the [Citi Bi
 The feed shows the latest statuses of ~858 Citi Bike stations. Below is a list of values per station and sample data for each. Any keys left blank are often blank in the data source as well, which I'll address in later steps. 
 
 | key | sample value |
-|:------------|:---------:|
+|------------:|:---------|
 | `id`        | 285|
 | `stationName` |"Broadway & E 14St"|
 | `availableDocks` |20|
@@ -79,12 +79,13 @@ The feed shows the latest statuses of ~858 Citi Bike stations. Below is a list o
 
 #### Stations-Raw
 
-To capture the raw station data without any transformations, I created a simple table that stored the following: 
+To have a back-up in case any of the subsequent steps went awry, I wanted to store the source data in the simplest way possible: I created a table `stations_raw` that stored the following: 
 
 |column_name|data_type|
-|-----------|---------|
+|-----------:|:---------|
+|id        |int4|
 |created_at|timestamp|
-|data|json|
+|status|json|
 
 Once the table created, I needed a way to collect data. A quick solution -- for me -- was to create [a Laravel application](https://github.com/alhankeser/citibike-tracker/)  that [makes it easy create console commands](https://laravel.com/docs/5.8/artisan#writing-commands). In combination with [Laravel Forge](https://forge.laravel.com), it's easy to set up a cron job that triggers [the necessary command](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49) at set intervals.
 
@@ -93,10 +94,25 @@ Once the commands created, I set up a [cron job](#Cron-Jobs) that ran once every
 |column_name|sample value|
 |----------:|:-----------|
 |id         |                                               31419|
-|data       |  {"executionTime": "2019-06-22 01:53:41 PM", "s...|
+|status     |  {"executionTime": "2019-06-22 01:53:41 PM", "s...|
 |created_at |                                 2019-06-22 13:54:01|
 
 #### Stations-Flat
+As part of the same command that creates the [Stations-Raw](#Stations-Raw) table, I [flattened out the JSON](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L80) and created a table with a single row per 3-minute interval, per station. I called this table `docks` (probably could have used a better naming convention throughout this project). 
+
+Here is the structure of `docks` and some sample data:
+
+|column_name|data_type|sample value|description|
+|-----------|---------|------------|-----------|
+|id         |int4     |10511778    |row id|
+|station_id |int4     |72          |unique id for each station|
+|available_bikes|int4 |4           |number of available bikes at the station|
+|available_docks|int4 |49          |number of available docks (places to park a bike) at the station|
+|station_status|text  |In Service  |whether the station is in or out of service|
+|last_communication_time|timestamp|2019-05-15 01:14:15|the last time the station sent back data|
+|created_at|timestamp|2019-05-15 01:15:02|self expanatory|
+
+After just over 2 months of this, I ended up with **34,301,048 rows** in this table. Luckily, I took some steps already to deal with the volume of data to make it manageable when analyzing without a high CPU/RAM environment. 
 
 #### Geocoding
 
@@ -129,5 +145,5 @@ View the code behind each command:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 6019 bytes to ../README.md
+    [NbConvertApp] Writing 6076 bytes to ../README.md
 
