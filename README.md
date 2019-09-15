@@ -110,9 +110,9 @@ Here is the structure of `docks` and some sample data:
 |available_docks|int4 |49          |number of available docks (places to park a bike) at the station|
 |station_status|text  |In Service  |whether the station is in or out of service|
 |last_communication_time|timestamp|2019-05-15 01:14:15|the last time the station sent back data|
-|created_at|timestamp|2019-05-15 01:15:02|self expanatory|
+|created_at|timestamp|2019-05-15 01:15:02|when the row was created|
 
-After just over 2 months of this, I ended up with **34,301,048 rows** in this table. Luckily, I took some steps already to deal with the volume of data to make it manageable when analyzing without a high CPU/RAM environment. 
+After just over 2 months of this, I ended up with **34,301,048 rows** in this table. Luckily, I took some steps already to deal with the volume of data to make it manageable when analyzing outside of a high CPU/RAM environment. 
 
 #### Geocoding
 
@@ -131,6 +131,8 @@ View the code behind each command:
 - `update:availability` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L179)
 - `update:weather` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L359)
 
+#### Data Quality Issues
+
 ### Transforming
 
 #### Availability by Station
@@ -145,5 +147,5 @@ View the code behind each command:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 6076 bytes to ../README.md
+    [NbConvertApp] Writing 7493 bytes to ../README.md
 
