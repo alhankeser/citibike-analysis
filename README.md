@@ -131,15 +131,21 @@ View the code behind each command:
 - `update:availability` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L179)
 - `update:weather` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L359)
 
-#### Data Quality Issues
-
 ### Transforming
 
 #### Availability by Station
 
 #### Predicted vs Observed Weather
 
-#### Auto-Generate README.md
+### Analysis
+
+#### Data Quality Issues
+
+#### Reducing Complexity
+
+<script src="https://gist.github.com/alhankeser/9fbaf67a8ce052de72f22ab1630cd91c.js"></script>
+
+Auto-Generate README.md:
 
 
 ```python
@@ -147,5 +153,5 @@ View the code behind each command:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 7493 bytes to ../README.md
+    [NbConvertApp] Writing 7531 bytes to ../README.md
 
