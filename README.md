@@ -20,7 +20,7 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
     - [Google Geocoding API](https://developers.google.com/maps/documentation/geocoding/intro)
 - **Created cron jobs** to collect Citi Bike station statuses for all ~858 stations, every 3 minutes, for ~2 months.
     - Total rows in final table: 5,800,274
-    - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Oops! 
+    - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Here's what that looks like: 
 ![My server crashed July 14](https://blog.alhan.co/storage/images/posts/2/web-server-crashed_2_1568434613_sm.jpg)
 - **Created a mini-ETL process** to transform data into the final output used below. 
     - Along the way, there were many errors, some of which I will resolve here.
@@ -98,9 +98,9 @@ Once the commands created, I set up a [cron job](#Cron-Jobs) that ran once every
 |created_at |                                 2019-06-22 13:54:01|
 
 #### Stations-Flat
-As part of the same command that creates the [Stations-Raw](#Stations-Raw) table, I [flattened out the JSON](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L80) and created a table with a single row per 3-minute interval, per station. I called this table `docks` (probably could have used a better naming convention throughout this project). 
+As part of the same command that creates the [stations_raw](#Stations-Raw) table, I [flattened out the JSON](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L80) and created a table with a single row per 3-minute interval, per station. We'll call this table `stations_flat` (probably could have used a better naming convention throughout this project). 
 
-Here is the structure of `docks` and some sample data:
+Here is the structure of `stations_flat` and some sample data:
 
 |column_name|data_type|sample value|description|
 |-----------|---------|------------|-----------|
@@ -112,7 +112,29 @@ Here is the structure of `docks` and some sample data:
 |last_communication_time|timestamp|2019-05-15 01:14:15|the last time the station sent back data|
 |created_at|timestamp|2019-05-15 01:15:02|when the row was created|
 
-After just over 2 months of this, I ended up with **34,301,048 rows** in this table. Luckily, I took some steps already to deal with the volume of data to make it manageable when analyzing outside of a high CPU/RAM environment. 
+After just over 2 months of this, I ended up with **34,301,048 rows** in this table. Luckily, I took some steps to make the volume of data more manageable when analyzing outside of a high CPU/RAM environment. 
+
+#### Stations-Static
+As the name suggests, `stations_static` contains information about each station that doesn't change minute-to-minute. Since there was a likelihood that stations be added, removed, renamed, I inserted or updated on duplicate each time `stations_flat` was updated. 
+
+|column_name|data_type|sample_value|description|
+|-----------|---------|------------|-----------|
+|id| int4|3119||
+|name| text|Vernon Blvd & 50 Ave||
+|latitude |float8|40.74232744||
+|longitude |float8|-73.95411749||
+|status_key| int4|1||
+|postal_code| text|NULL||
+|st_address_1| text|Vernon Blvd & 50 Ave||
+|st_address_2| text|NULL||
+|total_docks| int4|45||
+|status| text|In Service||
+|altitude| text|NULL||
+|location| text|NULL||
+|land_mark| text|NULL||
+|city| text|NULL||
+|is_test_station| int4|0||
+|created_at|timestamp|2019-05-02 01:32:03||
 
 #### Geocoding
 
@@ -142,8 +164,7 @@ View the code behind each command:
 #### Data Quality Issues
 
 #### Reducing Complexity
-
-<script src="https://gist.github.com/alhankeser/9fbaf67a8ce052de72f22ab1630cd91c.js"></script>
+https://gist.github.com/alhankeser/9fbaf67a8ce052de72f22ab1630cd91c
 
 Auto-Generate README.md:
 
@@ -153,5 +174,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 7531 bytes to ../README.md
+    [NbConvertApp] Writing 8837 bytes to ../README.md
 
