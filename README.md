@@ -21,6 +21,7 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
 - **Created cron jobs** to collect Citi Bike station statuses for all ~858 stations, every 3 minutes, for ~2 months.
     - Total rows in final table: 5,800,274
     - "Why stop after 2 months," you ask? Because my server ran out of space while I was on vacation. Here's what that looks like: 
+
 ![My server crashed July 14](https://blog.alhan.co/storage/images/posts/2/web-server-crashed_2_1568434613_sm.jpg)
 - **Created a mini-ETL process** to transform data into the final output used below. 
     - Along the way, there were many errors, some of which I will resolve here.
@@ -79,23 +80,16 @@ The feed shows the latest statuses of ~858 Citi Bike stations. Below is a list o
 
 #### Stations-Raw
 
-To have a back-up in case any of the subsequent steps went awry, I wanted to store the source data in the simplest way possible: I created a table `stations_raw` that stored the following: 
+To have a back-up in case any of the subsequent steps went awry, I wanted to store the source data in the simplest way possible: a table `stations_raw` that stored the following: 
 
-|column_name|data_type|
-|-----------:|:---------|
-|id        |int4|
-|created_at|timestamp|
-|status|json|
+|column_name|data_type|sample value|
+|-----------|-----------|----------|
+|id         |int4|31419|
+|status     |json|{"executionTime": "2019-06-22 01:53:41 PM", "s...|
 
 Once the table created, I needed a way to collect data. A quick solution -- for me -- was to create [a Laravel application](https://github.com/alhankeser/citibike-tracker/)  that [makes it easy create console commands](https://laravel.com/docs/5.8/artisan#writing-commands). In combination with [Laravel Forge](https://forge.laravel.com), it's easy to set up a cron job that triggers [the necessary command](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49) at set intervals.
 
-Once the commands created, I set up a [cron job](#Cron-Jobs) that ran once every 3 minutes. This resulted in the collection of 41,325 rows. Below I've provided a quick idea of what this base table looks like:
-
-|column_name|sample value|
-|----------:|:-----------|
-|id         |                                               31419|
-|status     |  {"executionTime": "2019-06-22 01:53:41 PM", "s...|
-|created_at |                                 2019-06-22 13:54:01|
+Once the commands created, I set up a [cron job](#Cron-Jobs) that ran once every 3 minutes. This resulted in the collection of 41,325 rows.
 
 #### Stations-Flat
 As part of the same command that creates the [stations_raw](#Stations-Raw) table, I [flattened out the JSON](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L80) and created a table with a single row per 3-minute interval, per station. We'll call this table `stations_flat` (probably could have used a better naming convention throughout this project). 
@@ -110,7 +104,6 @@ Here is the structure of `stations_flat` and some sample data:
 |available_docks|int4 |49          |number of available docks (places to park a bike) at the station|
 |station_status|text  |In Service  |whether the station is in or out of service|
 |last_communication_time|timestamp|2019-05-15 01:14:15|the last time the station sent back data|
-|created_at|timestamp|2019-05-15 01:15:02|when the row was created|
 
 After just over 2 months of this, I ended up with **34,301,048 rows** in this table. Luckily, I took some steps to make the volume of data more manageable when analyzing outside of a high CPU/RAM environment. 
 
@@ -119,7 +112,7 @@ As the name suggests, `stations_static` contains information about each station 
 
 |column_name|data_type|sample_value|description|
 |-----------|---------|------------|-----------|
-|id| int4|3119||
+|id| int4|3119|unique `station_id` found throughout db|
 |name| text|Vernon Blvd & 50 Ave||
 |latitude |float8|40.74232744||
 |longitude |float8|-73.95411749||
@@ -134,11 +127,23 @@ As the name suggests, `stations_static` contains information about each station 
 |land_mark| text|NULL||
 |city| text|NULL||
 |is_test_station| int4|0||
-|created_at|timestamp|2019-05-02 01:32:03||
 
 #### Geocoding
+As can be seen from the `stations_static` table above, many of the location-related values are null. This was the case for all stations. I wanted to be able to group stations by neighborhood and zip. Also, I wanted to use zip to associate weather data to each station, without having to make separate requests for each station (to stay within the free tier of the [Dark Sky Weather API](https://darksky.net/dev/docs)). 
+
+To geocode from lat/long for each station into human-readeable location info, I used the [Google Geocoding API](https://developers.google.com/maps/documentation/geocoding/intro). [See the command I used to create the below table](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L92)
+
+|column_name|data_type|sample value|description|
+|-----------|---------|------------|-----------|
+|id|int4|1||
+|station_id|int4|3119|unique station id|
+|zip|text|11101|zip code of station|
+|hood_1|text|LIC|neighborhood or the closest thing provided by Google|
+|hood_2|text|Hunters Point|another level of neighborhood|
+|borough|text|Queens||
 
 #### Weather
+### `IN PROGRESS`
 
 #### Cron Jobs
 I'm not going to spend a lot of time on discussing cron jobs, but here are the patterns I was using to run everything. There is probably a more optimal approach that I am not aware of. 
@@ -150,8 +155,9 @@ I'm not going to spend a lot of time on discussing cron jobs, but here are the p
 
 View the code behind each command:
 - `get:docks` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L49)
-- `update:availability` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L179)
+- `update:availability 0` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L179)
 - `update:weather` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L359)
+- `get:weather 0` [view](https://github.com/alhankeser/citibike-tracker/blob/d61f82adde88c90430205785297abf9f3de07c4d/app/Console/Kernel.php#L276)
 
 ### Transforming
 
@@ -174,5 +180,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 8837 bytes to ../README.md
+    [NbConvertApp] Writing 8489 bytes to ../README.md
 
