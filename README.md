@@ -387,6 +387,14 @@ First, let's get an understanding of the rows affected:
 
 
 ```python
+print(df['weather_status'].unique())
+```
+
+    ['predicted' 'observed' nan]
+
+
+
+```python
 print('Weather Status: ')
 print(df[df['weather_status'] == 'predicted'].count()[0], str(round(df[df['weather_status'] == 'predicted'].count()[0]/df.count()[0]*100)) + '%' , ' Predicted')
 print(df[df['weather_status'] == 'observed'].count()[0], str(round(df[df['weather_status'] == 'observed'].count()[0]/df.count()[0]*100)) + '%', ' Observed')
@@ -435,6 +443,100 @@ print(len(df[df['weather_status'].isna()]['time_interval'].unique()))
     4928
 
 
+
+```python
+print('Start: ', df[df['weather_status'].isna()][['time_interval']].values[0])
+print('Finish: ', df[df['weather_status'].isna()][['time_interval']].values[-1])
+```
+
+    Start:  ['2019-05-21T11:45:00.000000000']
+    Finish:  ['2019-07-12T03:45:00.000000000']
+
+
+I want to get weather data at the hour-level to keep things reasonable when fetching weather data, so I am going to round down the `time_interval` column:
+
+
+```python
+df['time_hour'] = df['time_interval'].apply(lambda x: x.replace(microsecond=0, second=0, minute=0))
+```
+
+Looks like it worked as expected:
+
+
+```python
+print(df[['zip', 'time_interval','time_hour']].head())
+```
+
+         zip       time_interval           time_hour
+    0  07306 2019-05-13 02:45:00 2019-05-13 02:00:00
+    1  07306 2019-05-13 02:30:00 2019-05-13 02:00:00
+    2  07306 2019-05-13 02:15:00 2019-05-13 02:00:00
+    3  07306 2019-05-13 02:00:00 2019-05-13 02:00:00
+    4  07306 2019-05-13 03:30:00 2019-05-13 03:00:00
+
+
+Looking at the `nan`'s in `weather_status`, which are the unique `zip` and `time_hour` combinations that we'll need to re-fetch data for? 
+
+
+```python
+df_weather_na = df[df['weather_status'].isna()][['zip','time_hour']].sort_values('time_hour').drop_duplicates()
+print(df_weather_na.head())
+print('Rows:', len(df_weather_na))
+```
+
+             zip           time_hour
+    24178  11101 2019-05-21 04:00:00
+    41518  10028 2019-05-21 04:00:00
+    62210  11215 2019-05-21 04:00:00
+    94761  10023 2019-05-21 04:00:00
+    55531  07306 2019-05-21 04:00:00
+    Rows: 21204
+
+
+The way that the [Dark Sky Weather API](https://darksky.net/dev/docs) works is that you can fetch a whole day's worth of data for each zip and it's considered one request. So rather than making an individual request for each zip and hour combination, I will be making a request for every zip and _day_ combination. Let's further reduce the granularity of the table...
+
+
+```python
+df_weather_na['time_day'] = df_weather_na['time_hour'].apply(lambda x: x.replace(hour=0))
+print(df_weather_na.head())
+print('Rows:', len(df_weather_na))
+```
+
+             zip           time_hour   time_day
+    24178  11101 2019-05-21 04:00:00 2019-05-21
+    41518  10028 2019-05-21 04:00:00 2019-05-21
+    62210  11215 2019-05-21 04:00:00 2019-05-21
+    94761  10023 2019-05-21 04:00:00 2019-05-21
+    55531  07306 2019-05-21 04:00:00 2019-05-21
+    Rows: 21204
+
+
+
+```python
+df_weather_na.drop('time_hour', axis=1, inplace=True)
+df_weather_na = df_weather_na.drop_duplicates()
+```
+
+
+```python
+print(df_weather_na.head())
+print('Rows:', len(df_weather_na))
+```
+
+             zip   time_day
+    24178  11101 2019-05-21
+    41518  10028 2019-05-21
+    62210  11215 2019-05-21
+    94761  10023 2019-05-21
+    55531  07306 2019-05-21
+    Rows: 995
+
+
+#### Re-fetching weather data
+Now that we've reduced the number of individual requests we'll need to make to the [Dark Sky Weather API](https://darksky.net/dev/docs) down to 995, we can start to setup the re-fetching process...
+
+###  `IN PROGRESS`
+
 Auto-Generate README.md:
 
 
@@ -443,5 +545,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 17126 bytes to ../README.md
+    [NbConvertApp] Writing 20048 bytes to ../README.md
 
