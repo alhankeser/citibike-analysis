@@ -669,6 +669,13 @@ print(df_weather_na.shape)
     (1422, 4)
 
 
+As a safety measure to avoid having to through these steps all over again, let's save this dataset to a csv:
+
+
+```python
+df_weather_na.to_csv('../input/df_weather_na.csv', index=False)
+```
+
 ###  `IN PROGRESS`
 
 Auto-Generate README.md:
@@ -679,5 +686,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 28934 bytes to ../README.md
+    [NbConvertApp] Writing 28766 bytes to ../README.md
 
