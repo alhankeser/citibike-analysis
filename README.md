@@ -489,25 +489,25 @@ print(df[['zip', 'time_interval','time_hour']].head())
     4  07306 2019-05-13 03:30:00 2019-05-13 03:00:00
 
 
-Looking at the `nan`'s in `weather_status`, which are the unique `zip` and `time_hour` combinations that we'll need to re-fetch data for? 
+Looking at the `nan`'s and `predicted`'s in `weather_status`, which are the unique `zip` and `time_hour` combinations that we'll need to re-fetch data for?
 
 
 ```python
-df_weather_na = df[df['weather_status'].isna()][['zip','time_hour']].sort_values('time_hour').drop_duplicates()
+df_weather_na = df[(df['weather_status'].isna()) | (df['weather_status'] == 'predicted')][['zip','time_hour']].sort_values('time_hour').drop_duplicates()
 print(df_weather_na.head())
 print('Rows:', len(df_weather_na))
 ```
 
              zip           time_hour
-    24178  11101 2019-05-21 04:00:00
-    41518  10028 2019-05-21 04:00:00
-    62210  11215 2019-05-21 04:00:00
-    94761  10023 2019-05-21 04:00:00
-    55531  07306 2019-05-21 04:00:00
-    Rows: 21204
+    0      07306 2019-05-13 02:00:00
+    12809  11101 2019-05-13 02:00:00
+    13452  11201 2019-05-13 02:00:00
+    887    10003 2019-05-13 02:00:00
+    5502   10013 2019-05-13 02:00:00
+    Rows: 22566
 
 
-The way that the [Dark Sky Weather API](https://darksky.net/dev/docs) works is that you can fetch a whole day's worth of data for each zip and it's considered one request. So rather than making an individual request for each zip and hour combination, I will be making a request for every zip and _day_ combination. Let's further reduce the granularity of the table...
+The way that the [Dark Sky Weather API](https://darksky.net/dev/docs) works is that you can fetch a whole day's worth of data for each location and it's considered one request. So rather than making an individual request for each zip and hour combination, I will be making a request for every zip and _day_ combination. Let's further reduce the granularity of the table...
 
 
 ```python
@@ -517,13 +517,15 @@ print('Rows:', len(df_weather_na))
 ```
 
              zip           time_hour   time_day
-    24178  11101 2019-05-21 04:00:00 2019-05-21
-    41518  10028 2019-05-21 04:00:00 2019-05-21
-    62210  11215 2019-05-21 04:00:00 2019-05-21
-    94761  10023 2019-05-21 04:00:00 2019-05-21
-    55531  07306 2019-05-21 04:00:00 2019-05-21
-    Rows: 21204
+    0      07306 2019-05-13 02:00:00 2019-05-13
+    12809  11101 2019-05-13 02:00:00 2019-05-13
+    13452  11201 2019-05-13 02:00:00 2019-05-13
+    887    10003 2019-05-13 02:00:00 2019-05-13
+    5502   10013 2019-05-13 02:00:00 2019-05-13
+    Rows: 22566
 
+
+We don't need `time_hour`: 
 
 
 ```python
@@ -538,16 +540,33 @@ print('Rows:', len(df_weather_na))
 ```
 
              zip   time_day
-    24178  11101 2019-05-21
-    41518  10028 2019-05-21
-    62210  11215 2019-05-21
-    94761  10023 2019-05-21
-    55531  07306 2019-05-21
-    Rows: 995
+    0      07306 2019-05-13
+    12809  11101 2019-05-13
+    13452  11201 2019-05-13
+    887    10003 2019-05-13
+    5502   10013 2019-05-13
+    Rows: 1422
+
+
+To call the Dark Sky Weather API, we'll need to have sample lat/long coordinates to send. To do so, I will grab the coordinates of one station within each zip to represent that zip. 
+
+
+```python
+df_weather_na['latitude'] = df_weather_na['zip'].apply(lambda x: df[df['zip'] == x]['latitude'].unique()[0])
+df_weather_na['longitude'] = df_weather_na['zip'].apply(lambda x: df[df['zip'] == x]['longitude'].unique()[0])
+print(df_weather_na.head())
+```
+
+             zip   time_day   latitude  longitude
+    0      07306 2019-05-13  40.730897 -74.063913
+    12809  11101 2019-05-13  40.742327 -73.954117
+    13452  11201 2019-05-13  40.692418 -73.989495
+    887    10003 2019-05-13  40.729538 -73.984267
+    5502   10013 2019-05-13  40.719105 -73.999733
 
 
 #### Re-fetching weather data
-Now that we've reduced the number of individual requests we'll need to make to the [Dark Sky Weather API](https://darksky.net/dev/docs) down to 995, we can start to setup the re-fetching process...
+Now that we've reduced the number of individual requests we'll need to make to the [Dark Sky Weather API](https://darksky.net/dev/docs), we can start to setup the re-fetching process...
 
 ###  `IN PROGRESS`
 
@@ -559,5 +578,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 23150 bytes to ../README.md
+    [NbConvertApp] Writing 24734 bytes to ../README.md
 
