@@ -353,6 +353,88 @@ Without much digging, it's easy to spot some data quality/consistency issues:
 1. `weather_status` should be 'observed' for all locations rather than 'predicted' since the dates are in the past. 
 1. `zip` is being converted to an integer and thus dropping the 0, which is may or may not be an issue. If wish to solve problem #1 then this chould be an issue. 
 
+#### Fixing the zip data_type issue
+The issue related to zip codes is related to New Jersey's that start with a zero. There are two options to fix this:  
+1. Mutate the existing column to a string and insert a 0 to the beginning of the incorrect zip.  
+OR  
+2. Read the csv with dtype specified as `str` for the `zip` column. 
+
+Going to go with option #2 and re-import the csv correctly, then check that `zip` is in fact treated as a string:
+
+
+```python
+date_cols = ['time_interval', 'updated_at', 'created_at']
+data_types = {'zip': str}
+df = pd.read_csv('../input/availability_interesting_original.csv', parse_dates=date_cols, dtype=data_types)
+```
+
+
+```python
+df['zip'].dtype
+```
+
+
+
+
+    dtype('O')
+
+
+
+#### Fixing the missing weather issue
+As for why weather_status is not set to 'observed', which would mean that the weather data my be inaccurate (since only the predicted weather was captured), I will need to first measure the extent of the problem, then remedy by fetching the correct weather data.
+
+First, let's get an understanding of the rows affected: 
+
+
+```python
+print('Weather Status: ')
+print(df[df['weather_status'] == 'predicted'].count()[0], str(round(df[df['weather_status'] == 'predicted'].count()[0]/df.count()[0]*100)) + '%' , ' Predicted')
+print(df[df['weather_status'] == 'observed'].count()[0], str(round(df[df['weather_status'] == 'observed'].count()[0]/df.count()[0]*100)) + '%', ' Observed')
+print(df[df['weather_status'].isna()].count()[0], str(round(df[df['weather_status'].isna()].count()[0]/df.count()[0]*100)) + '%'' NAs')
+```
+
+    Weather Status: 
+    6448 3.0%  Predicted
+    81605 44.0%  Observed
+    97977 53.0% NAs
+
+
+It is apparent that there is a larger issue here: we have `nan` values in the `weather_status` column! Let's assume that there is no option to go back and re-run the original commands that fetched the weather data in the first place and that I will have to do this all here...
+
+Let's see which stations are affected by the missing weather_status data: 
+
+
+```python
+print(df[df['weather_status'].isna()]['hood'].unique())
+```
+
+    ['UES' 'Williamsburg' 'LIC' 'New York County' 'Yorkville' 'UWS'
+     'Journal Square' 'Park Slope' 'Downtown Brooklyn' 'Chelsea'
+     'Prospect Heights' 'Crown Heights' 'Lincoln Square' 'Alphabet City'
+     'Canal Street' 'Financial District' 'Little Italy' 'Tribeca'
+     'Ukrainian Village' 'Battery Park City' 'West Village' 'Clinton Hill'
+     'Lower East Side' "Hell's Kitchen" 'Midtown East' 'Peter Cooper Village'
+     'Stuyvesant Town-Peter Cooper Village']
+
+
+
+```python
+print(df[df['weather_status'].isna()]['zip'].unique())
+```
+
+    ['10075' '11249' '11101' '10022' '10028' '10024' '07306' '11215' '11201'
+     '10011' '11238' '10023' '10009' '10013' '10004' '10007' '10003' '10282'
+     '10014' '11205' '10002' '10036' '10010']
+
+
+
+```python
+print(len(df[df['weather_status'].isna()]['time_interval'].unique()))
+```
+
+    4928
+
+
 Auto-Generate README.md:
 
 
