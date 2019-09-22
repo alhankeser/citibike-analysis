@@ -644,9 +644,9 @@ print('(~' + str(round(elapsed_time_2/elapsed_time_3)) + 'X faster than method 2
 print('(~' + str(round(elapsed_time_1/elapsed_time_3)) + 'X faster than method 1)')
 ```
 
-    Process Time Elapsed:  0.0071
-    (~219X faster than method 2)
-    (~6051X faster than method 1)
+    Process Time Elapsed:  0.0051
+    (~304X faster than method 2)
+    (~8424X faster than method 1)
 
 
 #### Re-fetching weather data
@@ -660,13 +660,13 @@ print(df_weather_na.head())
 print(df_weather_na.shape)
 ```
 
-         zip   time_day  latitude_x  longitude_x  longitude_y  latitude_y
-    0  07306 2019-05-13   40.730897   -74.063913   -74.063913   40.730897
-    1  07306 2019-05-14   40.730897   -74.063913   -74.063913   40.730897
-    2  07306 2019-05-15   40.730897   -74.063913   -74.063913   40.730897
-    3  07306 2019-05-16   40.730897   -74.063913   -74.063913   40.730897
-    4  07306 2019-05-17   40.730897   -74.063913   -74.063913   40.730897
-    (1422, 6)
+         zip   time_day  longitude   latitude
+    0  07306 2019-05-13 -74.063913  40.730897
+    1  07306 2019-05-14 -74.063913  40.730897
+    2  07306 2019-05-15 -74.063913  40.730897
+    3  07306 2019-05-16 -74.063913  40.730897
+    4  07306 2019-05-17 -74.063913  40.730897
+    (1422, 4)
 
 
 ###  `IN PROGRESS`
@@ -679,5 +679,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 25566 bytes to ../README.md
+    [NbConvertApp] Writing 28934 bytes to ../README.md
 
