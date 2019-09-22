@@ -37,7 +37,7 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
 - [Transforming](#Transforming)
     - [Availability by Station](#Availability-by-Station)
 - [Exploratory Data Analysis](#Exploratory-Data-Analysis)
-    
+    - [Hypotheses](#Hypotheses)
 
 ### Packages
 Importing a few packages that will help with describing, cleaning and visualizing things. 
@@ -211,6 +211,20 @@ Below is the flat table `availability` that combined the above tables, purpose-b
 
 ### Exploratory Data Analysis
 On to the fun part! Now that I've got all of my station-by-station availability by 15-minute interval, it's time to explore. 
+
+#### Hypotheses
+
+Below is a list of hypotheses, in no particular order, that may be interesting to validate in the following analysis:  
+- If we categorize stations by 'residential', 'business', and 'touristic' we will see distinctly different availability patterns.
+- On business days, rush hour traffic will significantly impact availability at 'residential' and 'business' stations, whereas 'touristic' stations will fluctuate throughout the day and may not have a repeating pattern.
+- Stations deemed 'touristic' will be more affected by changes in weather than non-touristic stations. 
+- Weekend, Holiday and Business Day availability patterns will be the most distinct for residential and business stations, whereas touristic stations will be less affected by type of day.
+- On evenings where inclement weather (in form of rain) was observed, there will be an increase in morning usage of Citi Bikes (by individuals who own bicycles, but prefer to take a Citi Bike into work to avoid having to ride home in the rain). 
+- On business days before and after a holiday, there may be a decrease in overall Citi Bike usage. Might be worth excluding these days entirely from the analysis as they do no represent business days or weekends. Luckily, we only have the 4th of July to deal with as part of this dataset. 
+
+
+#### Other Notes
+- When there is only one bike left at 'residential' or 'business' stations, it may not be a major issue, but it is a problem when it happens at stations classified as 'touristic', assuming that tourists are seldom alone. 
 
 #### Reducing Complexity
 First things first, I wanted to reduce the number of stations I was analyzing. The `availability` table resulted in nearly 6 million rows after 2 months, so I decided to export a subset of "interesting" stations to begin analyzing. Below is the query I used to find the interesting stations, based on whether there is a high variability in number of bikes, that the bikes regularly get refilled, and that the station has a decent number of bikes. I also limited the number of stations per neighborhood to 1.  
@@ -545,5 +559,5 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 20048 bytes to ../README.md
+    [NbConvertApp] Writing 23150 bytes to ../README.md
 
