@@ -48,9 +48,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from darksky import forecast
 import random
 import warnings
 import time
+from datetime import datetime as dt
+from dateutil.parser import parse
+from dotenv import load_dotenv
+import os
+load_dotenv()
 warnings.filterwarnings('ignore')
 pd.set_option('display.max_columns', None)
 ```
@@ -570,18 +576,18 @@ Looking at what I did above, there's a less resource-intensive way to do that. F
 
 
 ```python
-df_zip_coord = df[['zip','longitude', 'latitude']].drop_duplicates()
-df_zip_coord['order'] = df_zip_coord.groupby('zip').longitude.rank(method='min')
+df_zip_coord = df[['zip','latitude', 'longitude']].drop_duplicates()
+df_zip_coord['order'] = df_zip_coord.groupby('zip').latitude.rank(method='min')
 print(df_zip_coord.sort_values('zip')[9:15])
 ```
 
-            zip  longitude   latitude  order
-    5495  10013 -73.999733  40.719105    2.0
-    5499  10013 -74.002472  40.719392    1.0
-    7077  10014 -74.006180  40.736529    1.0
-    7640  10022 -73.972078  40.757148    1.0
-    7636  10022 -73.971092  40.763505    2.0
-    8960  10023 -73.989187  40.775160    1.0
+            zip   latitude  longitude  order
+    5495  10013  40.719105 -73.999733    1.0
+    5499  10013  40.719392 -74.002472    2.0
+    7077  10014  40.736529 -74.006180    1.0
+    7640  10022  40.757148 -73.972078    1.0
+    7636  10022  40.763505 -73.971092    2.0
+    8960  10023  40.775160 -73.989187    1.0
 
 
 
@@ -591,12 +597,12 @@ df_zip_coord.drop('order', inplace=True, axis=1)
 print(df_zip_coord.head())
 ```
 
-            zip  longitude   latitude
-    0     07306 -74.063913  40.730897
-    224   10002 -73.985180  40.720664
-    886   10003 -73.984267  40.729538
-    1548  10004 -74.011678  40.703652
-    2210  10007 -74.013012  40.714979
+            zip   latitude  longitude
+    0     07306  40.730897 -74.063913
+    224   10002  40.720664 -73.985180
+    886   10003  40.729538 -73.984267
+    1548  10004  40.703652 -74.011678
+    2210  10007  40.714979 -74.013012
 
 
 1. Original method timing:
@@ -631,7 +637,7 @@ print('(~' + str(round(elapsed_time_1/elapsed_time_2)) + 'X faster than method 1
     (~28X faster than method 1)
 
 
-And an even faster method, now that we have the lookup table, is to simply merge: 
+3. And an even faster method, now that we have the lookup table, is to simply merge: 
 
 
 ```python
@@ -644,9 +650,9 @@ print('(~' + str(round(elapsed_time_2/elapsed_time_3)) + 'X faster than method 2
 print('(~' + str(round(elapsed_time_1/elapsed_time_3)) + 'X faster than method 1)')
 ```
 
-    Process Time Elapsed:  0.0051
-    (~304X faster than method 2)
-    (~8424X faster than method 1)
+    Process Time Elapsed:  0.0046
+    (~338X faster than method 2)
+    (~9339X faster than method 1)
 
 
 #### Re-fetching weather data
@@ -660,12 +666,12 @@ print(df_weather_na.head())
 print(df_weather_na.shape)
 ```
 
-         zip   time_day  longitude   latitude
-    0  07306 2019-05-13 -74.063913  40.730897
-    1  07306 2019-05-14 -74.063913  40.730897
-    2  07306 2019-05-15 -74.063913  40.730897
-    3  07306 2019-05-16 -74.063913  40.730897
-    4  07306 2019-05-17 -74.063913  40.730897
+         zip   time_day   latitude  longitude
+    0  07306 2019-05-13  40.730897 -74.063913
+    1  07306 2019-05-14  40.730897 -74.063913
+    2  07306 2019-05-15  40.730897 -74.063913
+    3  07306 2019-05-16  40.730897 -74.063913
+    4  07306 2019-05-17  40.730897 -74.063913
     (1422, 4)
 
 
@@ -676,7 +682,296 @@ As a safety measure to avoid having to through these steps all over again, let's
 df_weather_na.to_csv('../input/df_weather_na.csv', index=False)
 ```
 
+Now on to creating a new DataFrame of correct weather data for the locations and days in `df_weather_na`, by hour. 
+
+1. Get the api key:
+
+
+```python
+try:
+    ds_key = os.getenv("DARK_SKY_API_KEY")
+except:
+    pass
+```
+
+2. Create a function to build a DataFrame over time. Since I need to regulate how often I call the DS API within a 24h period, I created a set of functions to allow me to pick up where I leave off with no wasted API calls. After some trial and error, I've got it working below. Comments on each function provide more details. 
+
+
+```python
+def get_weather_by_day(api_key, row):
+    """Call the DarkSky API to request single day of weather and return a Forecast object"""
+    day = dt.strftime(row.time_day, '%Y-%m-%dT%H:%M:%S')
+    lat = row.latitude
+    long = row.longitude
+    weather = forecast(api_key, lat, long, time=day)
+    return weather
+
+def create_weather_df(zip_code, weather):
+    """Create a DataFrame with the same columns and naming convention as primary df"""
+    df_weather = pd.DataFrame(weather['hourly']['data'])
+    df_weather.rename(columns={ 'precipIntensity': 'precip_intensity',
+                                'windSpeed': 'wind_speed',
+                                'windGust': 'wind_gust',
+                                'cloudCover': 'cloud_cover',
+                                'summary': 'weather_summary',
+                                'time': 'time_hour'
+                                }, inplace=True)
+    df_weather = df_weather[['time_hour','precip_intensity','temperature',\
+                             'humidity', 'wind_speed', 'wind_gust', \
+                             'weather_summary', 'cloud_cover']]
+    df_weather['time_hour'] = df_weather['time_hour'].apply(lambda x: dt.utcfromtimestamp(x-14400).strftime('%Y-%m-%d %H:%M:%S'))
+    df_weather['time_hour'] = df_weather['time_hour'].apply(lambda x: parse(x))
+    df_weather['zip'] = str(zip_code)
+    df_weather['weather_status'] = 'observed'
+    return df_weather
+
+def get_start_index_df():
+    """Get the latest version of the fixed weather df and the index on which to start"""
+    try:
+        df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str})
+        df_weather_filtered = df_weather_na[(df_weather_na['zip'] == df_weather_fix.iloc[-24]['zip'])\
+                                        & (df_weather_na['time_day'] == df_weather_fix.iloc[-24]['time_hour'])]
+        return df_weather_fix, df_weather_filtered.index[0]+1
+    except:
+        df_weather_fix = pd.DataFrame(columns=['time_hour', 'precip_intensity',\
+                                       'temperature', 'humidity',\
+                                       'wind_speed', 'wind_gust',\
+                                       'weather_summary', 'cloud_cover',\
+                                       'zip', 'weather_status'])
+        return df_weather_fix, 0
+    
+def get_weather_fix(ds_key, api_limit, df_weather_na):
+    """Create an on-going df which contains missing weather data in increments as defined in api_limit"""
+    df_weather_fix, start_index = get_start_index_df()
+    api_limit = api_limit
+    for index, row in df_weather_na[start_index:].iterrows():
+        if index < (api_limit + start_index):
+            weather = get_weather_by_day(ds_key, row)
+            df_weather_day = create_weather_df(row['zip'], weather)
+            df_weather_fix = df_weather_fix.append(df_weather_day)
+        else:
+            df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
+            print('Saved weather_fix to csv after', 'getting weather for', row['zip'], 'on', str(row['time_day']).split(' ')[0])
+            break
+        if index % 10 == 0:
+            df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
+            print('Saved weather_fix to csv after', 'getting weather for', row['zip'], 'on', str(row['time_day']).split(' ')[0])
+    print('DONE!')
+    
+get_weather_fix(ds_key, 13, df_weather_na)
+```
+
+    Saved weather_fix to csv after getting weather for 10007 on 2019-06-30
+    Saved weather_fix to csv after getting weather for 10007 on 2019-07-10
+    Saved weather_fix to csv after getting weather for 10007 on 2019-07-13
+    DONE!
+
+
+I successfully kept the total API requests to just below 1000 for today:
+![Dark Sky API Calls today](https://blog.alhan.co/storage/images/posts/2/dark-sky-api-calls_2_1569210787_md.jpg)
+
 ###  `IN PROGRESS`
+
+
+```python
+df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str})
+df_copy = df.copy(deep=True)
+df_copy = df_copy.merge(df_weather, how='left', on=['time_hour', 'zip'])
+df_copy[(df_copy['zip'] == '07306') & \
+              (df_copy['time_hour'] == '2019-05-13 02:00:00')]
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>station_id</th>
+      <th>station_name</th>
+      <th>station_status</th>
+      <th>latitude</th>
+      <th>longitude</th>
+      <th>zip</th>
+      <th>borough</th>
+      <th>hood</th>
+      <th>available_bikes</th>
+      <th>available_docks</th>
+      <th>time_interval</th>
+      <th>created_at</th>
+      <th>weather_summary_x</th>
+      <th>precip_intensity_x</th>
+      <th>temperature_x</th>
+      <th>humidity_x</th>
+      <th>wind_speed_x</th>
+      <th>wind_gust_x</th>
+      <th>cloud_cover_x</th>
+      <th>weather_status_x</th>
+      <th>updated_at</th>
+      <th>time_hour</th>
+      <th>precip_intensity_y</th>
+      <th>temperature_y</th>
+      <th>humidity_y</th>
+      <th>wind_speed_y</th>
+      <th>wind_gust_y</th>
+      <th>weather_summary_y</th>
+      <th>cloud_cover_y</th>
+      <th>weather_status_y</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3195</td>
+      <td>Sip Ave</td>
+      <td>In Service</td>
+      <td>40.730897</td>
+      <td>-74.063913</td>
+      <td>07306</td>
+      <td>New Jersey</td>
+      <td>Journal Square</td>
+      <td>1</td>
+      <td>33</td>
+      <td>2019-05-13 02:45:00</td>
+      <td>2019-05-13 02:45:04</td>
+      <td>Overcast</td>
+      <td>0.0</td>
+      <td>44.86</td>
+      <td>0.91</td>
+      <td>6.85</td>
+      <td>9.65</td>
+      <td>1.0</td>
+      <td>predicted</td>
+      <td>2019-05-13 02:45:04</td>
+      <td>2019-05-13 02:00:00</td>
+      <td>0.0033</td>
+      <td>43.0</td>
+      <td>0.92</td>
+      <td>7.69</td>
+      <td>7.69</td>
+      <td>Overcast</td>
+      <td>1.0</td>
+      <td>observed</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3195</td>
+      <td>Sip Ave</td>
+      <td>In Service</td>
+      <td>40.730897</td>
+      <td>-74.063913</td>
+      <td>07306</td>
+      <td>New Jersey</td>
+      <td>Journal Square</td>
+      <td>0</td>
+      <td>34</td>
+      <td>2019-05-13 02:30:00</td>
+      <td>2019-05-13 02:30:04</td>
+      <td>Overcast</td>
+      <td>0.0</td>
+      <td>44.86</td>
+      <td>0.91</td>
+      <td>6.85</td>
+      <td>9.65</td>
+      <td>1.0</td>
+      <td>predicted</td>
+      <td>2019-05-13 02:45:04</td>
+      <td>2019-05-13 02:00:00</td>
+      <td>0.0033</td>
+      <td>43.0</td>
+      <td>0.92</td>
+      <td>7.69</td>
+      <td>7.69</td>
+      <td>Overcast</td>
+      <td>1.0</td>
+      <td>observed</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3195</td>
+      <td>Sip Ave</td>
+      <td>In Service</td>
+      <td>40.730897</td>
+      <td>-74.063913</td>
+      <td>07306</td>
+      <td>New Jersey</td>
+      <td>Journal Square</td>
+      <td>0</td>
+      <td>34</td>
+      <td>2019-05-13 02:15:00</td>
+      <td>2019-05-13 02:15:05</td>
+      <td>Overcast</td>
+      <td>0.0</td>
+      <td>44.86</td>
+      <td>0.91</td>
+      <td>6.85</td>
+      <td>9.65</td>
+      <td>1.0</td>
+      <td>predicted</td>
+      <td>2019-05-13 02:45:04</td>
+      <td>2019-05-13 02:00:00</td>
+      <td>0.0033</td>
+      <td>43.0</td>
+      <td>0.92</td>
+      <td>7.69</td>
+      <td>7.69</td>
+      <td>Overcast</td>
+      <td>1.0</td>
+      <td>observed</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3195</td>
+      <td>Sip Ave</td>
+      <td>In Service</td>
+      <td>40.730897</td>
+      <td>-74.063913</td>
+      <td>07306</td>
+      <td>New Jersey</td>
+      <td>Journal Square</td>
+      <td>0</td>
+      <td>34</td>
+      <td>2019-05-13 02:00:00</td>
+      <td>2019-05-13 02:00:05</td>
+      <td>Overcast</td>
+      <td>0.0</td>
+      <td>44.86</td>
+      <td>0.91</td>
+      <td>6.85</td>
+      <td>9.65</td>
+      <td>1.0</td>
+      <td>predicted</td>
+      <td>2019-05-13 02:45:04</td>
+      <td>2019-05-13 02:00:00</td>
+      <td>0.0033</td>
+      <td>43.0</td>
+      <td>0.92</td>
+      <td>7.69</td>
+      <td>7.69</td>
+      <td>Overcast</td>
+      <td>1.0</td>
+      <td>observed</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
 
 Auto-Generate README.md:
 
@@ -686,5 +981,7 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 28766 bytes to ../README.md
+    [NbConvertApp] Writing 28956 bytes to ../README.md
 
+
+[Powered by Dark Sky](https://darksky.net/poweredby/)

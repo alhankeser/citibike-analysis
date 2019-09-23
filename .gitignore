@@ -1,3 +1,5 @@
 input/*
 !input/availability_interesting_original.csv
 !input/df_weather_na.csv
+!input/df_weather_fix.csv
+.env
