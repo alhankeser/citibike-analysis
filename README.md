@@ -630,11 +630,9 @@ df_weather_na['longitude'] = df_weather_na['zip'].apply(lambda x: df_zip_coord[d
 end_time_2 = time.process_time()
 elapsed_time_2 = round(end_time_2 - start_time_2, 4)
 print('Process Time Elapsed: ', elapsed_time_2)
-print('(~' + str(round(elapsed_time_1/elapsed_time_2)) + 'X faster than method 1)')
 ```
 
-    Process Time Elapsed:  1.5525
-    (~28X faster than method 1)
+    Process Time Elapsed:  2.028
 
 
 3. And an even faster method, now that we have the lookup table, is to simply merge: 
@@ -646,13 +644,9 @@ df_weather_na = df_weather_na.merge(df_zip_coord, how='inner', on='zip')
 end_time_3 = time.process_time()
 elapsed_time_3 = round(end_time_3 - start_time_3, 4)
 print('Process Time Elapsed: ', elapsed_time_3)
-print('(~' + str(round(elapsed_time_2/elapsed_time_3)) + 'X faster than method 2)')
-print('(~' + str(round(elapsed_time_1/elapsed_time_3)) + 'X faster than method 1)')
 ```
 
-    Process Time Elapsed:  0.0046
-    (~338X faster than method 2)
-    (~9339X faster than method 1)
+    Process Time Elapsed:  0.0073
 
 
 #### Re-fetching weather data
@@ -753,225 +747,95 @@ def get_weather_fix(ds_key, api_limit, df_weather_na):
             df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
             print('Saved weather_fix to csv after', 'getting weather for', row['zip'], 'on', str(row['time_day']).split(' ')[0])
             break
-        if index % 10 == 0:
+        if index % 100 == 0:
             df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
             print('Saved weather_fix to csv after', 'getting weather for', row['zip'], 'on', str(row['time_day']).split(' ')[0])
     print('DONE!')
-    
-get_weather_fix(ds_key, 13, df_weather_na)
 ```
 
-    Saved weather_fix to csv after getting weather for 10007 on 2019-06-30
-    Saved weather_fix to csv after getting weather for 10007 on 2019-07-10
-    Saved weather_fix to csv after getting weather for 10007 on 2019-07-13
-    DONE!
-
-
-I successfully kept the total API requests to just below 1000 for today:
+Successfully kept the total API requests to just below 1000 on day 1:
 ![Dark Sky API Calls today](https://blog.alhan.co/storage/images/posts/2/dark-sky-api-calls_2_1569210787_md.jpg)
 
-###  `IN PROGRESS`
+And finished the remaining locations on Day 2: 
 
 
 ```python
-df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str})
-df_copy = df.copy(deep=True)
-df_copy = df_copy.merge(df_weather, how='left', on=['time_hour', 'zip'])
-df_copy[(df_copy['zip'] == '07306') & \
-              (df_copy['time_hour'] == '2019-05-13 02:00:00')]
+get_weather_fix(ds_key, 600, df_weather_na)
 ```
 
+    Saved weather_fix to csv after getting weather for 10004 on 2019-06-18
+    Saved weather_fix to csv after getting weather for 10011 on 2019-05-25
+    Saved weather_fix to csv after getting weather for 11249 on 2019-07-02
+    Saved weather_fix to csv after getting weather for 10024 on 2019-06-08
+    Saved weather_fix to csv after getting weather for 10023 on 2019-05-15
+    Saved weather_fix to csv after getting weather for 10036 on 2019-06-22
+    DONE!
 
 
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
+```python
+date_cols = ['time_hour']
+df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str}, parse_dates=date_cols)
+df_copy = df.copy(deep=True)
+df_copy = df_copy.merge(df_weather_fix, how='left', on=['time_hour', 'zip'])
+print(df_copy[(df_copy['zip'] == '07306')].head())
+```
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>station_id</th>
-      <th>station_name</th>
-      <th>station_status</th>
-      <th>latitude</th>
-      <th>longitude</th>
-      <th>zip</th>
-      <th>borough</th>
-      <th>hood</th>
-      <th>available_bikes</th>
-      <th>available_docks</th>
-      <th>time_interval</th>
-      <th>created_at</th>
-      <th>weather_summary_x</th>
-      <th>precip_intensity_x</th>
-      <th>temperature_x</th>
-      <th>humidity_x</th>
-      <th>wind_speed_x</th>
-      <th>wind_gust_x</th>
-      <th>cloud_cover_x</th>
-      <th>weather_status_x</th>
-      <th>updated_at</th>
-      <th>time_hour</th>
-      <th>precip_intensity_y</th>
-      <th>temperature_y</th>
-      <th>humidity_y</th>
-      <th>wind_speed_y</th>
-      <th>wind_gust_y</th>
-      <th>weather_summary_y</th>
-      <th>cloud_cover_y</th>
-      <th>weather_status_y</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>3195</td>
-      <td>Sip Ave</td>
-      <td>In Service</td>
-      <td>40.730897</td>
-      <td>-74.063913</td>
-      <td>07306</td>
-      <td>New Jersey</td>
-      <td>Journal Square</td>
-      <td>1</td>
-      <td>33</td>
-      <td>2019-05-13 02:45:00</td>
-      <td>2019-05-13 02:45:04</td>
-      <td>Overcast</td>
-      <td>0.0</td>
-      <td>44.86</td>
-      <td>0.91</td>
-      <td>6.85</td>
-      <td>9.65</td>
-      <td>1.0</td>
-      <td>predicted</td>
-      <td>2019-05-13 02:45:04</td>
-      <td>2019-05-13 02:00:00</td>
-      <td>0.0033</td>
-      <td>43.0</td>
-      <td>0.92</td>
-      <td>7.69</td>
-      <td>7.69</td>
-      <td>Overcast</td>
-      <td>1.0</td>
-      <td>observed</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>3195</td>
-      <td>Sip Ave</td>
-      <td>In Service</td>
-      <td>40.730897</td>
-      <td>-74.063913</td>
-      <td>07306</td>
-      <td>New Jersey</td>
-      <td>Journal Square</td>
-      <td>0</td>
-      <td>34</td>
-      <td>2019-05-13 02:30:00</td>
-      <td>2019-05-13 02:30:04</td>
-      <td>Overcast</td>
-      <td>0.0</td>
-      <td>44.86</td>
-      <td>0.91</td>
-      <td>6.85</td>
-      <td>9.65</td>
-      <td>1.0</td>
-      <td>predicted</td>
-      <td>2019-05-13 02:45:04</td>
-      <td>2019-05-13 02:00:00</td>
-      <td>0.0033</td>
-      <td>43.0</td>
-      <td>0.92</td>
-      <td>7.69</td>
-      <td>7.69</td>
-      <td>Overcast</td>
-      <td>1.0</td>
-      <td>observed</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3195</td>
-      <td>Sip Ave</td>
-      <td>In Service</td>
-      <td>40.730897</td>
-      <td>-74.063913</td>
-      <td>07306</td>
-      <td>New Jersey</td>
-      <td>Journal Square</td>
-      <td>0</td>
-      <td>34</td>
-      <td>2019-05-13 02:15:00</td>
-      <td>2019-05-13 02:15:05</td>
-      <td>Overcast</td>
-      <td>0.0</td>
-      <td>44.86</td>
-      <td>0.91</td>
-      <td>6.85</td>
-      <td>9.65</td>
-      <td>1.0</td>
-      <td>predicted</td>
-      <td>2019-05-13 02:45:04</td>
-      <td>2019-05-13 02:00:00</td>
-      <td>0.0033</td>
-      <td>43.0</td>
-      <td>0.92</td>
-      <td>7.69</td>
-      <td>7.69</td>
-      <td>Overcast</td>
-      <td>1.0</td>
-      <td>observed</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3195</td>
-      <td>Sip Ave</td>
-      <td>In Service</td>
-      <td>40.730897</td>
-      <td>-74.063913</td>
-      <td>07306</td>
-      <td>New Jersey</td>
-      <td>Journal Square</td>
-      <td>0</td>
-      <td>34</td>
-      <td>2019-05-13 02:00:00</td>
-      <td>2019-05-13 02:00:05</td>
-      <td>Overcast</td>
-      <td>0.0</td>
-      <td>44.86</td>
-      <td>0.91</td>
-      <td>6.85</td>
-      <td>9.65</td>
-      <td>1.0</td>
-      <td>predicted</td>
-      <td>2019-05-13 02:45:04</td>
-      <td>2019-05-13 02:00:00</td>
-      <td>0.0033</td>
-      <td>43.0</td>
-      <td>0.92</td>
-      <td>7.69</td>
-      <td>7.69</td>
-      <td>Overcast</td>
-      <td>1.0</td>
-      <td>observed</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+       station_id station_name station_status   latitude  longitude    zip  \
+    0        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
+    1        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
+    2        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
+    3        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
+    4        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
+    
+          borough            hood  available_bikes  available_docks  \
+    0  New Jersey  Journal Square                1               33   
+    1  New Jersey  Journal Square                0               34   
+    2  New Jersey  Journal Square                0               34   
+    3  New Jersey  Journal Square                0               34   
+    4  New Jersey  Journal Square                0               34   
+    
+            time_interval          created_at weather_summary_x  \
+    0 2019-05-13 02:45:00 2019-05-13 02:45:04          Overcast   
+    1 2019-05-13 02:30:00 2019-05-13 02:30:04          Overcast   
+    2 2019-05-13 02:15:00 2019-05-13 02:15:05          Overcast   
+    3 2019-05-13 02:00:00 2019-05-13 02:00:05          Overcast   
+    4 2019-05-13 03:30:00 2019-05-13 03:30:05          Overcast   
+    
+       precip_intensity_x  temperature_x  humidity_x  wind_speed_x  wind_gust_x  \
+    0                 0.0          44.86        0.91          6.85         9.65   
+    1                 0.0          44.86        0.91          6.85         9.65   
+    2                 0.0          44.86        0.91          6.85         9.65   
+    3                 0.0          44.86        0.91          6.85         9.65   
+    4                 0.0          45.11        0.91          5.87         8.39   
+    
+       cloud_cover_x weather_status_x          updated_at           time_hour  \
+    0            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
+    1            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
+    2            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
+    3            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
+    4            1.0        predicted 2019-05-13 03:42:04 2019-05-13 03:00:00   
+    
+       precip_intensity_y  temperature_y  humidity_y  wind_speed_y  wind_gust_y  \
+    0              0.0033          43.00        0.92          7.69         7.69   
+    1              0.0033          43.00        0.92          7.69         7.69   
+    2              0.0033          43.00        0.92          7.69         7.69   
+    3              0.0033          43.00        0.92          7.69         7.69   
+    4              0.0000          42.89        0.92          5.74         5.74   
+    
+      weather_summary_y  cloud_cover_y weather_status_y  
+    0          Overcast            1.0         observed  
+    1          Overcast            1.0         observed  
+    2          Overcast            1.0         observed  
+    3          Overcast            1.0         observed  
+    4          Overcast            1.0         observed  
 
 
+
+```python
+weather_cols = ['precip_intensity', 'temperature', 'humidity','wind_speed',\
+                'wind_gust', 'weather_summary', 'cloud_cover', 'weather_status']
+```
 
 Auto-Generate README.md:
 
@@ -981,7 +845,7 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 28956 bytes to ../README.md
+    [NbConvertApp] Writing 38078 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
