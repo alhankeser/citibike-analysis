@@ -36,6 +36,11 @@ This is an original analysis of Citi Bike station data from May-June 2019 to fin
     - [Cron Jobs](#Cron-Jobs)
 - [Transforming](#Transforming)
     - [Availability by Station](#Availability-by-Station)
+- [Cleaning](#Cleaning)
+    - [Reducing Complexity](#Reducing-Complexity)
+    - [Data Quality Issues](#Data-Quality-Issues)
+    - [Fixing Zip Data Type](#Fixing-the-zip-data_type-issue)
+    - [Fixing Missing Weather](#Fixing-the-missing-weather-issue)
 - [Exploratory Data Analysis](#Exploratory-Data-Analysis)
     - [Hypotheses](#Hypotheses)
 
@@ -216,22 +221,7 @@ Below is the flat table `availability` that combined the above tables, purpose-b
 |created_at|timestamptz|
 |updated_at|timestamptz|
 
-### Exploratory Data Analysis
-On to the fun part! Now that I've got all of my station-by-station availability by 15-minute interval, it's time to explore. 
-
-#### Hypotheses
-
-Below is a list of hypotheses, in no particular order, that may be interesting to validate in the following analysis:  
-- If we categorize stations by 'residential', 'business', and 'touristic' we will see distinctly different availability patterns.
-- On business days, rush hour traffic will significantly impact availability at 'residential' and 'business' stations, whereas 'touristic' stations will fluctuate throughout the day and may not have a repeating pattern.
-- Stations deemed 'touristic' will be more affected by changes in weather than non-touristic stations. 
-- Weekend, Holiday and Business Day availability patterns will be the most distinct for residential and business stations, whereas touristic stations will be less affected by type of day.
-- On evenings where inclement weather (in form of rain) was observed, there will be an increase in morning usage of Citi Bikes (by individuals who own bicycles, but prefer to take a Citi Bike into work to avoid having to ride home in the rain). 
-- On business days before and after a holiday, there may be a decrease in overall Citi Bike usage. Might be worth excluding these days entirely from the analysis as they do no represent business days or weekends. Luckily, we only have the 4th of July to deal with as part of this dataset. 
-
-
-#### Other Notes
-- When there is only one bike left at 'residential' or 'business' stations, it may not be a major issue, but it is a problem when it happens at stations classified as 'touristic', assuming that tourists are seldom alone. 
+### Cleaning
 
 #### Reducing Complexity
 First things first, I wanted to reduce the number of stations I was analyzing. The `availability` table resulted in nearly 6 million rows after 2 months, so I decided to export a subset of "interesting" stations to begin analyzing. Below is the query I used to find the interesting stations, based on whether there is a high variability in number of bikes, that the bikes regularly get refilled, and that the station has a decent number of bikes. I also limited the number of stations per neighborhood to 1.  
@@ -297,7 +287,10 @@ join
 
 The query above reduced the nearly 6 million rows down to 186,000. The csv export used for the analysis below can be [found here](https://github.com/alhankeser/citibike-analysis/blob/master/input/availability_interesting_original.csv). 
 
-#### Load Data
+#### Data Quality Issues
+As can be seen below, without much digging, it's easy to spot some data quality/consistency issues: 
+1. `zip` is being converted to an integer and thus dropping the 0, which is may or may not be an issue. If wish to solve problem #1 then this chould be an issue. 
+1. `weather_status` should be 'observed' for all locations rather than 'predicted' since the dates are in the past. 
 
 
 ```python
@@ -368,11 +361,6 @@ print(df.head(3)) #printing to improve how this looks in the README.md markdown 
     1 2019-05-13 02:45:04  
     2 2019-05-13 02:45:04  
 
-
-#### Data Quality Issues
-Without much digging, it's easy to spot some data quality/consistency issues: 
-1. `zip` is being converted to an integer and thus dropping the 0, which is may or may not be an issue. If wish to solve problem #1 then this chould be an issue. 
-1. `weather_status` should be 'observed' for all locations rather than 'predicted' since the dates are in the past. 
 
 #### Fixing the zip data_type issue
 The issue related to zip codes is related to New Jersey's that start with a zero. There are two options to fix this:  
@@ -808,15 +796,32 @@ df = pd.concat([df_weather_observed, df_weather_fix])
 df.to_csv('../input/availability_interesting_weather_fix.csv', index=False)
 ```
 
+### Exploratory Data Analysis
+On to the fun part! Now that I've got all of my station-by-station availability by 15-minute interval, it's time to explore. 
+
+#### Hypotheses
+
+Below is a list of hypotheses, in no particular order, that may be interesting to validate in the following analysis:  
+- If we categorize stations by 'residential', 'business', and 'touristic' we will see distinctly different availability patterns.
+- On business days, rush hour traffic will significantly impact availability at 'residential' and 'business' stations, whereas 'touristic' stations will fluctuate throughout the day and may not have a repeating pattern.
+- Stations deemed 'touristic' will be more affected by changes in weather than non-touristic stations. 
+- Weekend, Holiday and Business Day availability patterns will be the most distinct for residential and business stations, whereas touristic stations will be less affected by type of day.
+- On evenings where inclement weather (in form of rain) was observed, there will be an increase in morning usage of Citi Bikes (by individuals who own bicycles, but prefer to take a Citi Bike into work to avoid having to ride home in the rain). 
+- On business days before and after a holiday, there may be a decrease in overall Citi Bike usage. Might be worth excluding these days entirely from the analysis as they do no represent business days or weekends. Luckily, we only have the 4th of July to deal with as part of this dataset. 
+
+
+#### Other Notes
+- When there is only one bike left at 'residential' or 'business' stations, it may not be a major issue, but it is a problem when it happens at stations classified as 'touristic', assuming that tourists are seldom alone. 
+
 Auto-Generate README.md:
 
 
 ```python
-!jupyter nbconvert --output-dir='..' --to markdown analysis.ipynb --output README.md
+!jupyter nbconvert --output-dir='..' --to markdown etl_and_cleaning.ipynb --output README.md
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 37106 bytes to ../README.md
+    [NbConvertApp] Writing 34779 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
