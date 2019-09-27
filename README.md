@@ -371,8 +371,8 @@ print(df.head(3)) #printing to improve how this looks in the README.md markdown 
 
 #### Data Quality Issues
 Without much digging, it's easy to spot some data quality/consistency issues: 
-1. `weather_status` should be 'observed' for all locations rather than 'predicted' since the dates are in the past. 
 1. `zip` is being converted to an integer and thus dropping the 0, which is may or may not be an issue. If wish to solve problem #1 then this chould be an issue. 
+1. `weather_status` should be 'observed' for all locations rather than 'predicted' since the dates are in the past. 
 
 #### Fixing the zip data_type issue
 The issue related to zip codes is related to New Jersey's that start with a zero. There are two options to fix this:  
@@ -753,88 +753,59 @@ def get_weather_fix(ds_key, api_limit, df_weather_na):
     print('DONE!')
 ```
 
-Successfully kept the total API requests to just below 1000 on day 1:
+
+```python
+get_weather_fix(ds_key, 999, df_weather_na)
+```
+
+Successfully kept the total API requests to just below 1000 on Day 1:
 ![Dark Sky API Calls today](https://blog.alhan.co/storage/images/posts/2/dark-sky-api-calls_2_1569210787_md.jpg)
 
-And finished the remaining locations on Day 2: 
+(And finished the remaining locations on Day 2)
+
+#### Joining the fixed weather data
+To avoid creating unnecessary columns by joining the fixed weather data to the entire df, I separate `df` into two:
+- Observed
+- NAs and Predicted (the dataset that needed joining with the fixed weather)
 
 
 ```python
-get_weather_fix(ds_key, 600, df_weather_na)
+# Rows that are already clean and don't need changing:
+df_weather_observed = df[df['weather_status'] == 'observed']
+
+# Rows that need weather data corrected:
+df_weather_na_predicted = df[(df['weather_status'].isna()) | (df['weather_status'] == 'predicted')]
+
+# Removing the bad columns:
+df_weather_na_predicted.drop(['precip_intensity', 'temperature', 'humidity',\
+                              'wind_speed', 'wind_gust', 'weather_summary', \
+                              'cloud_cover', 'weather_status'], axis=1, inplace=True)
+
+# Getting the newly created fixed weather data:
+df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str}, parse_dates=['time_hour'])
+
+# Joining with the corrected weather data:
+df_weather_fixed = df_weather_na_predicted.merge(df_weather_fix, how='left', on=['time_hour', 'zip'])
+
+# Quickly checking that it worked and that we didn't break anything:
+print('df_weather_observed.shape:', df_weather_observed.shape)
+print('df_weather_na_predicted.shape:', df_weather_fixed.shape)
+print('NAs or Predicted:', len(df_weather_fixed[(df_weather_fixed['weather_status'].isna()) | (df_weather_fixed['weather_status'] == 'predicted')].index))
 ```
 
-    Saved weather_fix to csv after getting weather for 10004 on 2019-06-18
-    Saved weather_fix to csv after getting weather for 10011 on 2019-05-25
-    Saved weather_fix to csv after getting weather for 11249 on 2019-07-02
-    Saved weather_fix to csv after getting weather for 10024 on 2019-06-08
-    Saved weather_fix to csv after getting weather for 10023 on 2019-05-15
-    Saved weather_fix to csv after getting weather for 10036 on 2019-06-22
-    DONE!
+    df_weather_observed.shape: (81605, 22)
+    df_weather_na_predicted.shape: (140785, 22)
+    NAs or Predicted: 0
 
 
+^ YAY!
 
-```python
-date_cols = ['time_hour']
-df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str}, parse_dates=date_cols)
-df_copy = df.copy(deep=True)
-df_copy = df_copy.merge(df_weather_fix, how='left', on=['time_hour', 'zip'])
-print(df_copy[(df_copy['zip'] == '07306')].head())
-```
-
-       station_id station_name station_status   latitude  longitude    zip  \
-    0        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
-    1        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
-    2        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
-    3        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
-    4        3195      Sip Ave     In Service  40.730897 -74.063913  07306   
-    
-          borough            hood  available_bikes  available_docks  \
-    0  New Jersey  Journal Square                1               33   
-    1  New Jersey  Journal Square                0               34   
-    2  New Jersey  Journal Square                0               34   
-    3  New Jersey  Journal Square                0               34   
-    4  New Jersey  Journal Square                0               34   
-    
-            time_interval          created_at weather_summary_x  \
-    0 2019-05-13 02:45:00 2019-05-13 02:45:04          Overcast   
-    1 2019-05-13 02:30:00 2019-05-13 02:30:04          Overcast   
-    2 2019-05-13 02:15:00 2019-05-13 02:15:05          Overcast   
-    3 2019-05-13 02:00:00 2019-05-13 02:00:05          Overcast   
-    4 2019-05-13 03:30:00 2019-05-13 03:30:05          Overcast   
-    
-       precip_intensity_x  temperature_x  humidity_x  wind_speed_x  wind_gust_x  \
-    0                 0.0          44.86        0.91          6.85         9.65   
-    1                 0.0          44.86        0.91          6.85         9.65   
-    2                 0.0          44.86        0.91          6.85         9.65   
-    3                 0.0          44.86        0.91          6.85         9.65   
-    4                 0.0          45.11        0.91          5.87         8.39   
-    
-       cloud_cover_x weather_status_x          updated_at           time_hour  \
-    0            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
-    1            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
-    2            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
-    3            1.0        predicted 2019-05-13 02:45:04 2019-05-13 02:00:00   
-    4            1.0        predicted 2019-05-13 03:42:04 2019-05-13 03:00:00   
-    
-       precip_intensity_y  temperature_y  humidity_y  wind_speed_y  wind_gust_y  \
-    0              0.0033          43.00        0.92          7.69         7.69   
-    1              0.0033          43.00        0.92          7.69         7.69   
-    2              0.0033          43.00        0.92          7.69         7.69   
-    3              0.0033          43.00        0.92          7.69         7.69   
-    4              0.0000          42.89        0.92          5.74         5.74   
-    
-      weather_summary_y  cloud_cover_y weather_status_y  
-    0          Overcast            1.0         observed  
-    1          Overcast            1.0         observed  
-    2          Overcast            1.0         observed  
-    3          Overcast            1.0         observed  
-    4          Overcast            1.0         observed  
-
+Now on to re-creating the weather-fixed version of `df`:
 
 
 ```python
-weather_cols = ['precip_intensity', 'temperature', 'humidity','wind_speed',\
-                'wind_gust', 'weather_summary', 'cloud_cover', 'weather_status']
+df = pd.concat([df_weather_observed, df_weather_fix])
+df.to_csv('../input/availability_interesting_weather_fix.csv', index=False)
 ```
 
 Auto-Generate README.md:
@@ -845,7 +816,7 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 38078 bytes to ../README.md
+    [NbConvertApp] Writing 37106 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
