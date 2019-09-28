@@ -758,6 +758,12 @@ To avoid creating unnecessary columns by joining the fixed weather data to the e
 
 
 ```python
+date_cols = ['time_interval', 'updated_at', 'created_at']
+data_types = {'zip': str}
+df = pd.read_csv('../input/availability_interesting_original.csv', parse_dates=date_cols, dtype=data_types)
+
+df['time_hour'] = df['time_interval'].apply(lambda x: x.replace(microsecond=0, second=0, minute=0))
+
 # Rows that are already clean and don't need changing:
 df_weather_observed = df[df['weather_status'] == 'observed']
 
@@ -775,29 +781,121 @@ df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str}, 
 # Joining with the corrected weather data:
 df_weather_fixed = df_weather_na_predicted.merge(df_weather_fix, how='left', on=['time_hour', 'zip'])
 
+# Concatenating the already fixed weather rows with the newly fixed rows:
+df_fixed = pd.concat([df_weather_observed, df_weather_fixed])
+df_fixed = df_fixed.drop_duplicates()
+
 # Quickly checking that it worked and that we didn't break anything:
-print('df_weather_observed.shape:', df_weather_observed.shape)
-print('df_weather_na_predicted.shape:', df_weather_fixed.shape)
-print('NAs or Predicted:', len(df_weather_fixed[(df_weather_fixed['weather_status'].isna()) | (df_weather_fixed['weather_status'] == 'predicted')].index))
+print(df_weather_observed.info())
+print(df_weather_fixed.info())
+print(df_fixed.info())
+print('NAs or Predicted:', len(df_fixed[(df_fixed['weather_status'].isna()) | (df_fixed['weather_status'] == 'predicted')].index))
+
 ```
 
-    df_weather_observed.shape: (81605, 22)
-    df_weather_na_predicted.shape: (140785, 22)
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 81605 entries, 72 to 186029
+    Data columns (total 22 columns):
+    station_id          81605 non-null int64
+    station_name        81605 non-null object
+    station_status      81605 non-null object
+    latitude            81605 non-null float64
+    longitude           81605 non-null float64
+    zip                 81605 non-null object
+    borough             81605 non-null object
+    hood                81605 non-null object
+    available_bikes     81605 non-null int64
+    available_docks     81605 non-null int64
+    time_interval       81605 non-null datetime64[ns]
+    created_at          81605 non-null datetime64[ns]
+    weather_summary     81605 non-null object
+    precip_intensity    81605 non-null float64
+    temperature         81605 non-null float64
+    humidity            81605 non-null float64
+    wind_speed          81605 non-null float64
+    wind_gust           81605 non-null float64
+    cloud_cover         81605 non-null float64
+    weather_status      81605 non-null object
+    updated_at          81605 non-null datetime64[ns]
+    time_hour           81605 non-null datetime64[ns]
+    dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
+    memory usage: 14.3+ MB
+    None
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 140785 entries, 0 to 140784
+    Data columns (total 22 columns):
+    station_id          140785 non-null int64
+    station_name        140785 non-null object
+    station_status      140785 non-null object
+    latitude            140785 non-null float64
+    longitude           140785 non-null float64
+    zip                 140785 non-null object
+    borough             140785 non-null object
+    hood                140785 non-null object
+    available_bikes     140785 non-null int64
+    available_docks     140785 non-null int64
+    time_interval       140785 non-null datetime64[ns]
+    created_at          140785 non-null datetime64[ns]
+    updated_at          140785 non-null datetime64[ns]
+    time_hour           140785 non-null datetime64[ns]
+    precip_intensity    140785 non-null float64
+    temperature         140785 non-null float64
+    humidity            140785 non-null float64
+    wind_speed          140785 non-null float64
+    wind_gust           140785 non-null float64
+    weather_summary     140785 non-null object
+    cloud_cover         140785 non-null float64
+    weather_status      140785 non-null object
+    dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
+    memory usage: 24.7+ MB
+    None
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 186758 entries, 72 to 140784
+    Data columns (total 22 columns):
+    available_bikes     186758 non-null int64
+    available_docks     186758 non-null int64
+    borough             186758 non-null object
+    cloud_cover         186758 non-null float64
+    created_at          186758 non-null datetime64[ns]
+    hood                186758 non-null object
+    humidity            186758 non-null float64
+    latitude            186758 non-null float64
+    longitude           186758 non-null float64
+    precip_intensity    186758 non-null float64
+    station_id          186758 non-null int64
+    station_name        186758 non-null object
+    station_status      186758 non-null object
+    temperature         186758 non-null float64
+    time_hour           186758 non-null datetime64[ns]
+    time_interval       186758 non-null datetime64[ns]
+    updated_at          186758 non-null datetime64[ns]
+    weather_status      186758 non-null object
+    weather_summary     186758 non-null object
+    wind_gust           186758 non-null float64
+    wind_speed          186758 non-null float64
+    zip                 186758 non-null object
+    dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
+    memory usage: 32.8+ MB
+    None
     NAs or Predicted: 0
 
 
-^ YAY!
-
-Now on to re-creating the weather-fixed version of `df`:
+Re-creating `df`, this time with fixed weather data:
 
 
 ```python
-df = pd.concat([df_weather_observed, df_weather_fix])
-df.to_csv('../input/availability_interesting_weather_fix.csv', index=False)
+df_fixed.to_csv('../input/availability_interesting_weather_fix.csv', index=False)
 ```
 
 ### Exploratory Data Analysis
-On to the fun part! Now that I've got all of my station-by-station availability by 15-minute interval, it's time to explore. 
+On to the fun part. Now that I've got all of my station-by-station availability by 15-minute interval, it's time to explore. 
+
+
+```python
+date_cols = ['time_interval', 'updated_at', 'created_at', 'time_hour']
+data_types = {'zip': str}
+df = pd.read_csv('../input/availability_interesting_weather_fix.csv', dtype={'zip': str}, parse_dates=date_cols)
+```
 
 #### Hypotheses
 
@@ -813,15 +911,58 @@ Below is a list of hypotheses, in no particular order, that may be interesting t
 #### Other Notes
 - When there is only one bike left at 'residential' or 'business' stations, it may not be a major issue, but it is a problem when it happens at stations classified as 'touristic', assuming that tourists are seldom alone. 
 
+
+```python
+df.info()
+```
+
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 186758 entries, 0 to 186757
+    Data columns (total 22 columns):
+    available_bikes     186758 non-null int64
+    available_docks     186758 non-null int64
+    borough             186758 non-null object
+    cloud_cover         186758 non-null float64
+    created_at          186758 non-null datetime64[ns]
+    hood                186758 non-null object
+    humidity            186758 non-null float64
+    latitude            186758 non-null float64
+    longitude           186758 non-null float64
+    precip_intensity    186758 non-null float64
+    station_id          186758 non-null int64
+    station_name        186758 non-null object
+    station_status      186758 non-null object
+    temperature         186758 non-null float64
+    time_hour           186758 non-null datetime64[ns]
+    time_interval       186758 non-null datetime64[ns]
+    updated_at          186758 non-null datetime64[ns]
+    weather_status      186758 non-null object
+    weather_summary     186758 non-null object
+    wind_gust           186758 non-null float64
+    wind_speed          186758 non-null float64
+    zip                 186758 non-null object
+    dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
+    memory usage: 31.3+ MB
+
+
+#### How does time of day effect Citi Bike availability?
+
+Create time of day column:
+
+
+```python
+df['hour'] = df['time_hour'].apply(lambda x: x.hour)
+```
+
 Auto-Generate README.md:
 
 
 ```python
-!jupyter nbconvert --output-dir='..' --to markdown etl_and_cleaning.ipynb --output README.md
+!jupyter nbconvert --output-dir='..' --to markdown analysis.ipynb --output README.md
 ```
 
-    [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 34779 bytes to ../README.md
+    [NbConvertApp] Converting notebook etl_and_cleaning.ipynb to markdown
+    [NbConvertApp] Writing 35059 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
