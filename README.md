@@ -954,6 +954,297 @@ Create time of day column:
 df['hour'] = df['time_hour'].apply(lambda x: x.hour)
 ```
 
+Visualize average availability by hour:
+
+
+```python
+sns.lineplot(x=df['hour'], y=df['available_bikes'])
+```
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x129117c88>
+
+
+
+
+![png](README_files/README_75_1.png)
+
+
+
+```python
+sns.distplot(df['hour'])
+```
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x1290d5e48>
+
+
+
+
+![png](README_files/README_76_1.png)
+
+
+
+```python
+df['time'] = df['time_interval'].apply(lambda x: x.time())
+```
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x=df['time'], y=df['available_bikes'])
+```
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x13c748940>
+
+
+
+
+![png](README_files/README_78_1.png)
+
+
+
+```python
+df['day'] = df['time_interval'].apply(lambda x: x.strftime('%A'))
+```
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df, hue='day')
+plt.show()
+```
+
+
+![png](README_files/README_80_0.png)
+
+
+
+```python
+def get_day_type(x):
+    if x.weekday() > 4:
+        return 'weekend'
+    return 'weekday'
+
+df['day_type'] = df['time_interval'].apply(lambda x: get_day_type(x))
+```
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df, hue='day_type')
+plt.show()
+```
+
+
+![png](README_files/README_82_0.png)
+
+
+
+```python
+for station in df['station_name'].unique():
+    fig, ax = plt.subplots(figsize=(8,4))
+    sns.lineplot(x='time', y='available_bikes', data=df[df['station_name'] == station], hue='day')
+    print(station)
+    plt.show()
+```
+
+    Sip Ave
+
+
+
+![png](README_files/README_83_1.png)
+
+
+    Suffolk St & Stanton St
+
+
+
+![png](README_files/README_83_3.png)
+
+
+    E 11 St & 1 Ave
+
+
+
+![png](README_files/README_83_5.png)
+
+
+    Broad St & Bridge St
+
+
+
+![png](README_files/README_83_7.png)
+
+
+    Murray St & West St
+
+
+
+![png](README_files/README_83_9.png)
+
+
+    1 Ave & E 18 St
+
+
+
+![png](README_files/README_83_11.png)
+
+
+    E 2 St & Avenue C
+
+
+
+![png](README_files/README_83_13.png)
+
+
+    E 23 St & 1 Ave
+
+
+
+![png](README_files/README_83_15.png)
+
+
+    W 15 St & 10 Ave
+
+
+
+![png](README_files/README_83_17.png)
+
+
+    Howard St & Centre St
+
+
+
+![png](README_files/README_83_19.png)
+
+
+    Lispenard St & Broadway
+
+
+
+![png](README_files/README_83_21.png)
+
+
+    Bank St & Hudson St
+
+
+
+![png](README_files/README_83_23.png)
+
+
+    E 59 St & Madison Ave
+
+
+
+![png](README_files/README_83_25.png)
+
+
+    E 51 St & Lexington Ave
+
+
+
+![png](README_files/README_83_27.png)
+
+
+    W 64 St & Thelonious Monk Circle
+
+
+
+![png](README_files/README_83_29.png)
+
+
+    Riverside Dr & W 82 St
+
+
+
+![png](README_files/README_83_31.png)
+
+
+    E 81 St & York Ave
+
+
+
+![png](README_files/README_83_33.png)
+
+
+    W 43 St & 10 Ave
+
+
+
+![png](README_files/README_83_35.png)
+
+
+    1 Ave & E 78 St
+
+
+
+![png](README_files/README_83_37.png)
+
+
+    Vesey Pl & River Terrace
+
+
+
+![png](README_files/README_83_39.png)
+
+
+    Vernon Blvd & 50 Ave
+
+
+
+![png](README_files/README_83_41.png)
+
+
+    Fulton St & Adams St
+
+
+
+![png](README_files/README_83_43.png)
+
+
+    Clinton Ave & Myrtle Ave
+
+
+
+![png](README_files/README_83_45.png)
+
+
+    3 St & 7 Ave
+
+
+
+![png](README_files/README_83_47.png)
+
+
+    N 6 St & Bedford Ave
+
+
+
+![png](README_files/README_83_49.png)
+
+
+    Underhill Ave & Pacific St
+
+
+
+![png](README_files/README_83_51.png)
+
+
+    Classon Ave & St Marks Ave
+
+
+
+![png](README_files/README_83_53.png)
+
+
 Auto-Generate README.md:
 
 
@@ -961,8 +1252,8 @@ Auto-Generate README.md:
 !jupyter nbconvert --output-dir='..' --to markdown analysis.ipynb --output README.md
 ```
 
-    [NbConvertApp] Converting notebook etl_and_cleaning.ipynb to markdown
-    [NbConvertApp] Writing 35059 bytes to ../README.md
+    [NbConvertApp] Converting notebook analysis.ipynb to markdown
+    [NbConvertApp] Writing 40866 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
