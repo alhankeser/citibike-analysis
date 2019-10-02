@@ -347,9 +347,9 @@ print(df.head(3)) #printing to improve how this looks in the README.md markdown 
     2  New Jersey  Journal Square                0               34   
     
             time_interval          created_at weather_summary  precip_intensity  \
-    0 2019-05-13 02:45:00 2019-05-13 02:45:04        Overcast               0.0   
-    1 2019-05-13 02:30:00 2019-05-13 02:30:04        Overcast               0.0   
-    2 2019-05-13 02:15:00 2019-05-13 02:15:05        Overcast               0.0   
+    0 2019-05-12 22:45:00 2019-05-13 02:45:04        Overcast               0.0   
+    1 2019-05-12 22:30:00 2019-05-13 02:30:04        Overcast               0.0   
+    2 2019-05-12 22:15:00 2019-05-13 02:15:05        Overcast               0.0   
     
        temperature  humidity  wind_speed  wind_gust  cloud_cover weather_status  \
     0        44.86      0.91        6.85       9.65          1.0      predicted   
@@ -458,8 +458,8 @@ print('Start: ', df[df['weather_status'].isna()][['time_interval']].values[0])
 print('Finish: ', df[df['weather_status'].isna()][['time_interval']].values[-1])
 ```
 
-    Start:  ['2019-05-21T11:45:00.000000000']
-    Finish:  ['2019-07-12T03:45:00.000000000']
+    Start:  ['2019-05-21T07:45:00.000000000']
+    Finish:  ['2019-07-11T23:45:00.000000000']
 
 
 I want to get weather data at the hour-level to keep things reasonable when fetching weather data, so I am going to round down the `time_interval` column:
@@ -477,11 +477,11 @@ print(df[['zip', 'time_interval','time_hour']].head())
 ```
 
          zip       time_interval           time_hour
-    0  07306 2019-05-13 02:45:00 2019-05-13 02:00:00
-    1  07306 2019-05-13 02:30:00 2019-05-13 02:00:00
-    2  07306 2019-05-13 02:15:00 2019-05-13 02:00:00
-    3  07306 2019-05-13 02:00:00 2019-05-13 02:00:00
-    4  07306 2019-05-13 03:30:00 2019-05-13 03:00:00
+    0  07306 2019-05-12 22:45:00 2019-05-12 22:00:00
+    1  07306 2019-05-12 22:30:00 2019-05-12 22:00:00
+    2  07306 2019-05-12 22:15:00 2019-05-12 22:00:00
+    3  07306 2019-05-12 22:00:00 2019-05-12 22:00:00
+    4  07306 2019-05-12 23:30:00 2019-05-12 23:00:00
 
 
 Looking at the `nan`'s and `predicted`'s in `weather_status`, which are the unique `zip` and `time_hour` combinations that we'll need to re-fetch data for?
@@ -494,11 +494,11 @@ print('Rows:', len(df_weather_na))
 ```
 
              zip           time_hour
-    0      07306 2019-05-13 02:00:00
-    12809  11101 2019-05-13 02:00:00
-    13452  11201 2019-05-13 02:00:00
-    887    10003 2019-05-13 02:00:00
-    5502   10013 2019-05-13 02:00:00
+    0      07306 2019-05-12 22:00:00
+    12809  11101 2019-05-12 22:00:00
+    13452  11201 2019-05-12 22:00:00
+    887    10003 2019-05-12 22:00:00
+    5502   10013 2019-05-12 22:00:00
     Rows: 22566
 
 
@@ -512,11 +512,11 @@ print('Rows:', len(df_weather_na))
 ```
 
              zip           time_hour   time_day
-    0      07306 2019-05-13 02:00:00 2019-05-13
-    12809  11101 2019-05-13 02:00:00 2019-05-13
-    13452  11201 2019-05-13 02:00:00 2019-05-13
-    887    10003 2019-05-13 02:00:00 2019-05-13
-    5502   10013 2019-05-13 02:00:00 2019-05-13
+    0      07306 2019-05-12 22:00:00 2019-05-12
+    12809  11101 2019-05-12 22:00:00 2019-05-12
+    13452  11201 2019-05-12 22:00:00 2019-05-12
+    887    10003 2019-05-12 22:00:00 2019-05-12
+    5502   10013 2019-05-12 22:00:00 2019-05-12
     Rows: 22566
 
 
@@ -535,12 +535,12 @@ print('Rows:', len(df_weather_na))
 ```
 
              zip   time_day
-    0      07306 2019-05-13
-    12809  11101 2019-05-13
-    13452  11201 2019-05-13
-    887    10003 2019-05-13
-    5502   10013 2019-05-13
-    Rows: 1422
+    0      07306 2019-05-12
+    12809  11101 2019-05-12
+    13452  11201 2019-05-12
+    887    10003 2019-05-12
+    5502   10013 2019-05-12
+    Rows: 1416
 
 
 To call the Dark Sky Weather API, we'll need to have sample lat/long coordinates to send. To do so, I will grab the coordinates of one station within each zip to represent that zip. 
@@ -634,7 +634,7 @@ elapsed_time_3 = round(end_time_3 - start_time_3, 4)
 print('Process Time Elapsed: ', elapsed_time_3)
 ```
 
-    Process Time Elapsed:  0.0073
+    Process Time Elapsed:  0.0052
 
 
 #### Re-fetching weather data
@@ -649,12 +649,12 @@ print(df_weather_na.shape)
 ```
 
          zip   time_day   latitude  longitude
-    0  07306 2019-05-13  40.730897 -74.063913
-    1  07306 2019-05-14  40.730897 -74.063913
-    2  07306 2019-05-15  40.730897 -74.063913
-    3  07306 2019-05-16  40.730897 -74.063913
-    4  07306 2019-05-17  40.730897 -74.063913
-    (1422, 4)
+    0  07306 2019-05-12  40.730897 -74.063913
+    1  07306 2019-05-13  40.730897 -74.063913
+    2  07306 2019-05-14  40.730897 -74.063913
+    3  07306 2019-05-15  40.730897 -74.063913
+    4  07306 2019-05-16  40.730897 -74.063913
+    (1416, 4)
 
 
 As a safety measure to avoid having to through these steps all over again, let's save this dataset to a csv:
@@ -680,6 +680,8 @@ except:
 
 
 ```python
+filename = '../input/df_weather_fix.csv'
+
 def get_weather_by_day(api_key, row):
     """Call the DarkSky API to request single day of weather and return a Forecast object"""
     day = dt.strftime(row.time_day, '%Y-%m-%dT%H:%M:%S')
@@ -710,7 +712,7 @@ def create_weather_df(zip_code, weather):
 def get_start_index_df():
     """Get the latest version of the fixed weather df and the index on which to start"""
     try:
-        df_weather_fix = pd.read_csv('../input/df_weather_fix.csv', dtype={'zip': str})
+        df_weather_fix = pd.read_csv(filename, dtype={'zip': str})
         df_weather_filtered = df_weather_na[(df_weather_na['zip'] == df_weather_fix.iloc[-24]['zip'])\
                                         & (df_weather_na['time_day'] == df_weather_fix.iloc[-24]['time_hour'])]
         return df_weather_fix, df_weather_filtered.index[0]+1
@@ -732,18 +734,128 @@ def get_weather_fix(ds_key, api_limit, df_weather_na):
             df_weather_day = create_weather_df(row['zip'], weather)
             df_weather_fix = df_weather_fix.append(df_weather_day)
         else:
-            df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
+            df_weather_fix.to_csv(filename, index=False)
             print('Saved weather_fix to csv after', 'getting weather for', row['zip'], 'on', str(row['time_day']).split(' ')[0])
             break
-        if index % 100 == 0:
-            df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
+        if index % 10 == 0:
+            df_weather_fix.to_csv(filename, index=False)
             print('Saved weather_fix to csv after', 'getting weather for', row['zip'], 'on', str(row['time_day']).split(' ')[0])
+        time.sleep(3)
     print('DONE!')
+    return df_weather_fix
 ```
 
 
 ```python
-get_weather_fix(ds_key, 999, df_weather_na)
+df_weather_fix = get_weather_fix(ds_key, 999, df_weather_na)
+```
+
+    Saved weather_fix to csv after getting weather for 07306 on 2019-05-22
+    Saved weather_fix to csv after getting weather for 07306 on 2019-06-01
+    Saved weather_fix to csv after getting weather for 07306 on 2019-06-11
+    Saved weather_fix to csv after getting weather for 07306 on 2019-06-21
+    Saved weather_fix to csv after getting weather for 07306 on 2019-07-01
+    Saved weather_fix to csv after getting weather for 07306 on 2019-07-11
+    Saved weather_fix to csv after getting weather for 11101 on 2019-05-20
+    Saved weather_fix to csv after getting weather for 11101 on 2019-05-30
+    Saved weather_fix to csv after getting weather for 11101 on 2019-06-09
+    Saved weather_fix to csv after getting weather for 11101 on 2019-06-19
+    Saved weather_fix to csv after getting weather for 11101 on 2019-06-29
+    Saved weather_fix to csv after getting weather for 11101 on 2019-07-09
+    Saved weather_fix to csv after getting weather for 11201 on 2019-05-18
+    Saved weather_fix to csv after getting weather for 11201 on 2019-05-28
+    Saved weather_fix to csv after getting weather for 11201 on 2019-06-07
+    Saved weather_fix to csv after getting weather for 11201 on 2019-06-17
+    Saved weather_fix to csv after getting weather for 11201 on 2019-06-27
+    Saved weather_fix to csv after getting weather for 11201 on 2019-07-07
+    Saved weather_fix to csv after getting weather for 10003 on 2019-05-16
+    Saved weather_fix to csv after getting weather for 10003 on 2019-05-26
+    Saved weather_fix to csv after getting weather for 10003 on 2019-06-05
+    Saved weather_fix to csv after getting weather for 10003 on 2019-06-15
+    Saved weather_fix to csv after getting weather for 10003 on 2019-06-25
+    Saved weather_fix to csv after getting weather for 10003 on 2019-07-05
+    Saved weather_fix to csv after getting weather for 10013 on 2019-05-14
+    Saved weather_fix to csv after getting weather for 10013 on 2019-05-24
+    Saved weather_fix to csv after getting weather for 10013 on 2019-06-03
+    Saved weather_fix to csv after getting weather for 10013 on 2019-06-13
+    Saved weather_fix to csv after getting weather for 10013 on 2019-06-23
+    Saved weather_fix to csv after getting weather for 10013 on 2019-07-03
+    Saved weather_fix to csv after getting weather for 11205 on 2019-05-16
+    Saved weather_fix to csv after getting weather for 11205 on 2019-05-26
+    Saved weather_fix to csv after getting weather for 11205 on 2019-06-05
+    Saved weather_fix to csv after getting weather for 11205 on 2019-06-15
+    Saved weather_fix to csv after getting weather for 11205 on 2019-06-25
+    Saved weather_fix to csv after getting weather for 11205 on 2019-07-08
+    Saved weather_fix to csv after getting weather for 10282 on 2019-05-18
+    Saved weather_fix to csv after getting weather for 10282 on 2019-05-28
+    Saved weather_fix to csv after getting weather for 10282 on 2019-06-07
+    Saved weather_fix to csv after getting weather for 10282 on 2019-06-17
+    Saved weather_fix to csv after getting weather for 10282 on 2019-06-27
+    Saved weather_fix to csv after getting weather for 10282 on 2019-07-07
+    Saved weather_fix to csv after getting weather for 11238 on 2019-05-16
+    Saved weather_fix to csv after getting weather for 11238 on 2019-05-26
+    Saved weather_fix to csv after getting weather for 11238 on 2019-06-05
+    Saved weather_fix to csv after getting weather for 11238 on 2019-06-15
+    Saved weather_fix to csv after getting weather for 11238 on 2019-06-25
+    Saved weather_fix to csv after getting weather for 11238 on 2019-07-05
+    Saved weather_fix to csv after getting weather for 10075 on 2019-05-14
+    Saved weather_fix to csv after getting weather for 10075 on 2019-05-24
+    Saved weather_fix to csv after getting weather for 10075 on 2019-06-03
+    Saved weather_fix to csv after getting weather for 10075 on 2019-06-13
+    Saved weather_fix to csv after getting weather for 10075 on 2019-06-23
+    Saved weather_fix to csv after getting weather for 10075 on 2019-07-03
+    Saved weather_fix to csv after getting weather for 10002 on 2019-05-12
+    Saved weather_fix to csv after getting weather for 10002 on 2019-05-22
+    Saved weather_fix to csv after getting weather for 10002 on 2019-06-01
+    Saved weather_fix to csv after getting weather for 10002 on 2019-06-11
+    Saved weather_fix to csv after getting weather for 10002 on 2019-06-21
+    Saved weather_fix to csv after getting weather for 10002 on 2019-07-01
+    Saved weather_fix to csv after getting weather for 10002 on 2019-07-11
+    Saved weather_fix to csv after getting weather for 10014 on 2019-05-20
+    Saved weather_fix to csv after getting weather for 10014 on 2019-05-30
+    Saved weather_fix to csv after getting weather for 10014 on 2019-06-09
+    Saved weather_fix to csv after getting weather for 10014 on 2019-06-19
+    Saved weather_fix to csv after getting weather for 10014 on 2019-06-29
+    Saved weather_fix to csv after getting weather for 10014 on 2019-07-11
+    Saved weather_fix to csv after getting weather for 11215 on 2019-05-20
+    Saved weather_fix to csv after getting weather for 11215 on 2019-05-30
+    Saved weather_fix to csv after getting weather for 11215 on 2019-06-09
+    Saved weather_fix to csv after getting weather for 11215 on 2019-06-19
+    Saved weather_fix to csv after getting weather for 11215 on 2019-06-29
+    Saved weather_fix to csv after getting weather for 11215 on 2019-07-09
+    Saved weather_fix to csv after getting weather for 10009 on 2019-05-18
+    Saved weather_fix to csv after getting weather for 10009 on 2019-05-28
+    Saved weather_fix to csv after getting weather for 10009 on 2019-06-07
+    Saved weather_fix to csv after getting weather for 10009 on 2019-06-17
+    Saved weather_fix to csv after getting weather for 10009 on 2019-06-27
+    Saved weather_fix to csv after getting weather for 10009 on 2019-07-07
+    Saved weather_fix to csv after getting weather for 10007 on 2019-05-16
+    Saved weather_fix to csv after getting weather for 10007 on 2019-05-26
+    Saved weather_fix to csv after getting weather for 10007 on 2019-06-05
+    Saved weather_fix to csv after getting weather for 10007 on 2019-06-15
+    Saved weather_fix to csv after getting weather for 10007 on 2019-06-25
+    Saved weather_fix to csv after getting weather for 10007 on 2019-07-05
+    Saved weather_fix to csv after getting weather for 10004 on 2019-05-14
+    Saved weather_fix to csv after getting weather for 10004 on 2019-05-24
+    Saved weather_fix to csv after getting weather for 10004 on 2019-06-03
+    Saved weather_fix to csv after getting weather for 10004 on 2019-06-13
+    Saved weather_fix to csv after getting weather for 10004 on 2019-06-23
+    Saved weather_fix to csv after getting weather for 10004 on 2019-07-03
+    Saved weather_fix to csv after getting weather for 10010 on 2019-05-12
+    Saved weather_fix to csv after getting weather for 10010 on 2019-05-22
+    Saved weather_fix to csv after getting weather for 10010 on 2019-06-01
+    Saved weather_fix to csv after getting weather for 10010 on 2019-06-11
+    Saved weather_fix to csv after getting weather for 10010 on 2019-06-21
+    Saved weather_fix to csv after getting weather for 10010 on 2019-07-01
+    Saved weather_fix to csv after getting weather for 10010 on 2019-07-11
+    Saved weather_fix to csv after getting weather for 10011 on 2019-05-20
+    Saved weather_fix to csv after getting weather for 10011 on 2019-05-29
+    DONE!
+
+
+
+```python
+df_weather_fix.to_csv('../input/df_weather_fix.csv', index=False)
 ```
 
 Successfully kept the total API requests to just below 1000 on Day 1:
@@ -822,60 +934,60 @@ print('NAs or Predicted:', len(df_fixed[(df_fixed['weather_status'].isna()) | (d
     memory usage: 14.3+ MB
     None
     <class 'pandas.core.frame.DataFrame'>
-    Int64Index: 140785 entries, 0 to 140784
+    Int64Index: 104425 entries, 0 to 104424
     Data columns (total 22 columns):
-    station_id          140785 non-null int64
-    station_name        140785 non-null object
-    station_status      140785 non-null object
-    latitude            140785 non-null float64
-    longitude           140785 non-null float64
-    zip                 140785 non-null object
-    borough             140785 non-null object
-    hood                140785 non-null object
-    available_bikes     140785 non-null int64
-    available_docks     140785 non-null int64
-    time_interval       140785 non-null datetime64[ns]
-    created_at          140785 non-null datetime64[ns]
-    updated_at          140785 non-null datetime64[ns]
-    time_hour           140785 non-null datetime64[ns]
-    precip_intensity    140785 non-null float64
-    temperature         140785 non-null float64
-    humidity            140785 non-null float64
-    wind_speed          140785 non-null float64
-    wind_gust           140785 non-null float64
-    weather_summary     140785 non-null object
-    cloud_cover         140785 non-null float64
-    weather_status      140785 non-null object
+    station_id          104425 non-null int64
+    station_name        104425 non-null object
+    station_status      104425 non-null object
+    latitude            104425 non-null float64
+    longitude           104425 non-null float64
+    zip                 104425 non-null object
+    borough             104425 non-null object
+    hood                104425 non-null object
+    available_bikes     104425 non-null int64
+    available_docks     104425 non-null int64
+    time_interval       104425 non-null datetime64[ns]
+    created_at          104425 non-null datetime64[ns]
+    updated_at          104425 non-null datetime64[ns]
+    time_hour           104425 non-null datetime64[ns]
+    precip_intensity    104425 non-null float64
+    temperature         104425 non-null float64
+    humidity            104425 non-null float64
+    wind_speed          104425 non-null float64
+    wind_gust           104425 non-null float64
+    weather_summary     104425 non-null object
+    cloud_cover         104425 non-null float64
+    weather_status      104425 non-null object
     dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
-    memory usage: 24.7+ MB
+    memory usage: 18.3+ MB
     None
     <class 'pandas.core.frame.DataFrame'>
-    Int64Index: 186758 entries, 72 to 140784
+    Int64Index: 186030 entries, 72 to 104424
     Data columns (total 22 columns):
-    available_bikes     186758 non-null int64
-    available_docks     186758 non-null int64
-    borough             186758 non-null object
-    cloud_cover         186758 non-null float64
-    created_at          186758 non-null datetime64[ns]
-    hood                186758 non-null object
-    humidity            186758 non-null float64
-    latitude            186758 non-null float64
-    longitude           186758 non-null float64
-    precip_intensity    186758 non-null float64
-    station_id          186758 non-null int64
-    station_name        186758 non-null object
-    station_status      186758 non-null object
-    temperature         186758 non-null float64
-    time_hour           186758 non-null datetime64[ns]
-    time_interval       186758 non-null datetime64[ns]
-    updated_at          186758 non-null datetime64[ns]
-    weather_status      186758 non-null object
-    weather_summary     186758 non-null object
-    wind_gust           186758 non-null float64
-    wind_speed          186758 non-null float64
-    zip                 186758 non-null object
+    available_bikes     186030 non-null int64
+    available_docks     186030 non-null int64
+    borough             186030 non-null object
+    cloud_cover         186030 non-null float64
+    created_at          186030 non-null datetime64[ns]
+    hood                186030 non-null object
+    humidity            186030 non-null float64
+    latitude            186030 non-null float64
+    longitude           186030 non-null float64
+    precip_intensity    186030 non-null float64
+    station_id          186030 non-null int64
+    station_name        186030 non-null object
+    station_status      186030 non-null object
+    temperature         186030 non-null float64
+    time_hour           186030 non-null datetime64[ns]
+    time_interval       186030 non-null datetime64[ns]
+    updated_at          186030 non-null datetime64[ns]
+    weather_status      186030 non-null object
+    weather_summary     186030 non-null object
+    wind_gust           186030 non-null float64
+    wind_speed          186030 non-null float64
+    zip                 186030 non-null object
     dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
-    memory usage: 32.8+ MB
+    memory usage: 32.6+ MB
     None
     NAs or Predicted: 0
 
@@ -917,32 +1029,32 @@ df.info()
 ```
 
     <class 'pandas.core.frame.DataFrame'>
-    RangeIndex: 186758 entries, 0 to 186757
+    RangeIndex: 186030 entries, 0 to 186029
     Data columns (total 22 columns):
-    available_bikes     186758 non-null int64
-    available_docks     186758 non-null int64
-    borough             186758 non-null object
-    cloud_cover         186758 non-null float64
-    created_at          186758 non-null datetime64[ns]
-    hood                186758 non-null object
-    humidity            186758 non-null float64
-    latitude            186758 non-null float64
-    longitude           186758 non-null float64
-    precip_intensity    186758 non-null float64
-    station_id          186758 non-null int64
-    station_name        186758 non-null object
-    station_status      186758 non-null object
-    temperature         186758 non-null float64
-    time_hour           186758 non-null datetime64[ns]
-    time_interval       186758 non-null datetime64[ns]
-    updated_at          186758 non-null datetime64[ns]
-    weather_status      186758 non-null object
-    weather_summary     186758 non-null object
-    wind_gust           186758 non-null float64
-    wind_speed          186758 non-null float64
-    zip                 186758 non-null object
+    available_bikes     186030 non-null int64
+    available_docks     186030 non-null int64
+    borough             186030 non-null object
+    cloud_cover         186030 non-null float64
+    created_at          186030 non-null datetime64[ns]
+    hood                186030 non-null object
+    humidity            186030 non-null float64
+    latitude            186030 non-null float64
+    longitude           186030 non-null float64
+    precip_intensity    186030 non-null float64
+    station_id          186030 non-null int64
+    station_name        186030 non-null object
+    station_status      186030 non-null object
+    temperature         186030 non-null float64
+    time_hour           186030 non-null datetime64[ns]
+    time_interval       186030 non-null datetime64[ns]
+    updated_at          186030 non-null datetime64[ns]
+    weather_status      186030 non-null object
+    weather_summary     186030 non-null object
+    wind_gust           186030 non-null float64
+    wind_speed          186030 non-null float64
+    zip                 186030 non-null object
     dtypes: datetime64[ns](4), float64(8), int64(3), object(7)
-    memory usage: 31.3+ MB
+    memory usage: 31.2+ MB
 
 
 #### How does time of day effect Citi Bike availability?
@@ -964,12 +1076,12 @@ sns.lineplot(x=df['hour'], y=df['available_bikes'])
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x129117c88>
+    <matplotlib.axes._subplots.AxesSubplot at 0x120d68c50>
 
 
 
 
-![png](README_files/README_75_1.png)
+![png](README_files/README_76_1.png)
 
 
 
@@ -980,12 +1092,12 @@ sns.distplot(df['hour'])
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x1290d5e48>
+    <matplotlib.axes._subplots.AxesSubplot at 0x120d53ba8>
 
 
 
 
-![png](README_files/README_76_1.png)
+![png](README_files/README_77_1.png)
 
 
 
@@ -1002,12 +1114,12 @@ sns.lineplot(x=df['time'], y=df['available_bikes'])
 
 
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x13c748940>
+    <matplotlib.axes._subplots.AxesSubplot at 0x125612eb8>
 
 
 
 
-![png](README_files/README_78_1.png)
+![png](README_files/README_79_1.png)
 
 
 
@@ -1023,7 +1135,7 @@ plt.show()
 ```
 
 
-![png](README_files/README_80_0.png)
+![png](README_files/README_81_0.png)
 
 
 
@@ -1044,205 +1156,124 @@ plt.show()
 ```
 
 
-![png](README_files/README_82_0.png)
+![png](README_files/README_83_0.png)
 
 
 
 ```python
 for station in df['station_name'].unique():
-    fig, ax = plt.subplots(figsize=(8,4))
-    sns.lineplot(x='time', y='available_bikes', data=df[df['station_name'] == station], hue='day')
-    print(station)
+    fig, ax = plt.subplots(figsize=(16,10))
+    sns.lineplot(x='time', y='available_bikes', data=df[df['station_name'] == station], hue='day').set_title(station)
+    plt.xticks(df['time'].unique(), rotation=90)
     plt.show()
 ```
 
-    Sip Ave
 
+![png](README_files/README_84_0.png)
 
 
-![png](README_files/README_83_1.png)
 
+![png](README_files/README_84_1.png)
 
-    Suffolk St & Stanton St
 
 
+![png](README_files/README_84_2.png)
 
-![png](README_files/README_83_3.png)
 
 
-    E 11 St & 1 Ave
+![png](README_files/README_84_3.png)
 
 
 
-![png](README_files/README_83_5.png)
+![png](README_files/README_84_4.png)
 
 
-    Broad St & Bridge St
 
+![png](README_files/README_84_5.png)
 
 
-![png](README_files/README_83_7.png)
 
+![png](README_files/README_84_6.png)
 
-    Murray St & West St
 
 
+![png](README_files/README_84_7.png)
 
-![png](README_files/README_83_9.png)
 
 
-    1 Ave & E 18 St
+![png](README_files/README_84_8.png)
 
 
 
-![png](README_files/README_83_11.png)
+![png](README_files/README_84_9.png)
 
 
-    E 2 St & Avenue C
 
+![png](README_files/README_84_10.png)
 
 
-![png](README_files/README_83_13.png)
 
+![png](README_files/README_84_11.png)
 
-    E 23 St & 1 Ave
 
 
+![png](README_files/README_84_12.png)
 
-![png](README_files/README_83_15.png)
 
 
-    W 15 St & 10 Ave
+![png](README_files/README_84_13.png)
 
 
 
-![png](README_files/README_83_17.png)
+![png](README_files/README_84_14.png)
 
 
-    Howard St & Centre St
 
+![png](README_files/README_84_15.png)
 
 
-![png](README_files/README_83_19.png)
 
+![png](README_files/README_84_16.png)
 
-    Lispenard St & Broadway
 
 
+![png](README_files/README_84_17.png)
 
-![png](README_files/README_83_21.png)
 
 
-    Bank St & Hudson St
+![png](README_files/README_84_18.png)
 
 
 
-![png](README_files/README_83_23.png)
+![png](README_files/README_84_19.png)
 
 
-    E 59 St & Madison Ave
 
+![png](README_files/README_84_20.png)
 
 
-![png](README_files/README_83_25.png)
 
+![png](README_files/README_84_21.png)
 
-    E 51 St & Lexington Ave
 
 
+![png](README_files/README_84_22.png)
 
-![png](README_files/README_83_27.png)
 
 
-    W 64 St & Thelonious Monk Circle
+![png](README_files/README_84_23.png)
 
 
 
-![png](README_files/README_83_29.png)
+![png](README_files/README_84_24.png)
 
 
-    Riverside Dr & W 82 St
 
+![png](README_files/README_84_25.png)
 
 
-![png](README_files/README_83_31.png)
 
-
-    E 81 St & York Ave
-
-
-
-![png](README_files/README_83_33.png)
-
-
-    W 43 St & 10 Ave
-
-
-
-![png](README_files/README_83_35.png)
-
-
-    1 Ave & E 78 St
-
-
-
-![png](README_files/README_83_37.png)
-
-
-    Vesey Pl & River Terrace
-
-
-
-![png](README_files/README_83_39.png)
-
-
-    Vernon Blvd & 50 Ave
-
-
-
-![png](README_files/README_83_41.png)
-
-
-    Fulton St & Adams St
-
-
-
-![png](README_files/README_83_43.png)
-
-
-    Clinton Ave & Myrtle Ave
-
-
-
-![png](README_files/README_83_45.png)
-
-
-    3 St & 7 Ave
-
-
-
-![png](README_files/README_83_47.png)
-
-
-    N 6 St & Bedford Ave
-
-
-
-![png](README_files/README_83_49.png)
-
-
-    Underhill Ave & Pacific St
-
-
-
-![png](README_files/README_83_51.png)
-
-
-    Classon Ave & St Marks Ave
-
-
-
-![png](README_files/README_83_53.png)
+![png](README_files/README_84_26.png)
 
 
 Auto-Generate README.md:
@@ -1253,7 +1284,13 @@ Auto-Generate README.md:
 ```
 
     [NbConvertApp] Converting notebook analysis.ipynb to markdown
-    [NbConvertApp] Writing 40866 bytes to ../README.md
+    [NbConvertApp] Support files will be in README_files/
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Writing 44131 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
