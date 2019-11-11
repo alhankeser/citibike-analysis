@@ -1012,16 +1012,9 @@ df = pd.read_csv('../input/availability_interesting_weather_fix.csv', dtype={'zi
 #### Hypotheses
 
 Below is a list of hypotheses, in no particular order, that may be interesting to validate in the following analysis:  
-- If we categorize stations by 'residential', 'business', and 'touristic' we will see distinctly different availability patterns.
-- On business days, rush hour traffic will significantly impact availability at 'residential' and 'business' stations, whereas 'touristic' stations will fluctuate throughout the day and may not have a repeating pattern.
-- Stations deemed 'touristic' will be more affected by changes in weather than non-touristic stations. 
-- Weekend, Holiday and Business Day availability patterns will be the most distinct for residential and business stations, whereas touristic stations will be less affected by type of day.
-- On evenings where inclement weather (in form of rain) was observed, there will be an increase in morning usage of Citi Bikes (by individuals who own bicycles, but prefer to take a Citi Bike into work to avoid having to ride home in the rain). 
+- There will be various categories of stations where usage patterns are similar.
+- On days where there is rain observed, overall usage will be lower.  
 - On business days before and after a holiday, there may be a decrease in overall Citi Bike usage. Might be worth excluding these days entirely from the analysis as they do no represent business days or weekends. Luckily, we only have the 4th of July to deal with as part of this dataset. 
-
-
-#### Other Notes
-- When there is only one bike left at 'residential' or 'business' stations, it may not be a major issue, but it is a problem when it happens at stations classified as 'touristic', assuming that tourists are seldom alone. 
 
 
 ```python
@@ -1276,6 +1269,540 @@ for station in df['station_name'].unique():
 ![png](README_files/README_84_26.png)
 
 
+
+```python
+for station in df['station_name'].unique():
+    fig, ax = plt.subplots(figsize=(16,10))
+    sns.lineplot(x='time', y='available_bikes', data=df[df['station_name'] == station], hue='day_type').set_title(station)
+    plt.xticks(df['time'].unique(), rotation=90)
+    plt.show()
+```
+
+
+![png](README_files/README_85_0.png)
+
+
+
+![png](README_files/README_85_1.png)
+
+
+
+![png](README_files/README_85_2.png)
+
+
+
+![png](README_files/README_85_3.png)
+
+
+
+![png](README_files/README_85_4.png)
+
+
+
+![png](README_files/README_85_5.png)
+
+
+
+![png](README_files/README_85_6.png)
+
+
+
+![png](README_files/README_85_7.png)
+
+
+
+![png](README_files/README_85_8.png)
+
+
+
+![png](README_files/README_85_9.png)
+
+
+
+![png](README_files/README_85_10.png)
+
+
+
+![png](README_files/README_85_11.png)
+
+
+
+![png](README_files/README_85_12.png)
+
+
+
+![png](README_files/README_85_13.png)
+
+
+
+![png](README_files/README_85_14.png)
+
+
+
+![png](README_files/README_85_15.png)
+
+
+
+![png](README_files/README_85_16.png)
+
+
+
+![png](README_files/README_85_17.png)
+
+
+
+![png](README_files/README_85_18.png)
+
+
+
+![png](README_files/README_85_19.png)
+
+
+
+![png](README_files/README_85_20.png)
+
+
+
+![png](README_files/README_85_21.png)
+
+
+
+![png](README_files/README_85_22.png)
+
+
+
+![png](README_files/README_85_23.png)
+
+
+
+![png](README_files/README_85_24.png)
+
+
+
+![png](README_files/README_85_25.png)
+
+
+
+![png](README_files/README_85_26.png)
+
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df[(df['station_name'] == 'Sip Ave') & (df['day_type'] == 'weekday')], hue='weather_summary')
+plt.xticks(df['time'].unique(), rotation=90)
+plt.show()
+```
+
+
+![png](README_files/README_86_0.png)
+
+
+
+```python
+df['pi_rounded'] = df['precip_intensity'].apply(lambda x: round(x,1))
+df.pi_rounded.unique()
+```
+
+
+
+
+    array([0. , 0.1, 0.2, 0.5, 0.3, 0.4, 0.6])
+
+
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df[(df['station_name'] == 'Sip Ave') & (df['day_type'] == 'weekday')], hue='pi_rounded')
+plt.xticks(df['time'].unique(), rotation=90)
+plt.show()
+```
+
+
+![png](README_files/README_88_0.png)
+
+
+
+```python
+df['is_raining'] = df['precip_intensity'].apply(lambda x: x > 0)
+df.is_raining.unique()
+```
+
+
+
+
+    array([False,  True])
+
+
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df[(df['station_name'] == 'Sip Ave') & (df['day_type'] == 'weekday')], hue='is_raining')
+plt.xticks(df['time'].unique(), rotation=90)
+plt.show()
+```
+
+
+![png](README_files/README_90_0.png)
+
+
+
+```python
+for station in df['station_name'].unique():
+    fig, ax = plt.subplots(figsize=(16,10))
+    sns.lineplot(x='time', y='available_bikes', data=df[(df['station_name'] == station) & (df['day_type'] == 'weekday')], hue='is_raining').set_title(station)
+    plt.xticks(df['time'].unique(), rotation=90)
+    plt.show()
+```
+
+
+![png](README_files/README_91_0.png)
+
+
+
+![png](README_files/README_91_1.png)
+
+
+
+![png](README_files/README_91_2.png)
+
+
+
+![png](README_files/README_91_3.png)
+
+
+
+![png](README_files/README_91_4.png)
+
+
+
+![png](README_files/README_91_5.png)
+
+
+
+![png](README_files/README_91_6.png)
+
+
+
+![png](README_files/README_91_7.png)
+
+
+
+![png](README_files/README_91_8.png)
+
+
+
+![png](README_files/README_91_9.png)
+
+
+
+![png](README_files/README_91_10.png)
+
+
+
+![png](README_files/README_91_11.png)
+
+
+
+![png](README_files/README_91_12.png)
+
+
+
+![png](README_files/README_91_13.png)
+
+
+
+![png](README_files/README_91_14.png)
+
+
+
+![png](README_files/README_91_15.png)
+
+
+
+![png](README_files/README_91_16.png)
+
+
+
+![png](README_files/README_91_17.png)
+
+
+
+![png](README_files/README_91_18.png)
+
+
+
+![png](README_files/README_91_19.png)
+
+
+
+![png](README_files/README_91_20.png)
+
+
+
+![png](README_files/README_91_21.png)
+
+
+
+![png](README_files/README_91_22.png)
+
+
+
+![png](README_files/README_91_23.png)
+
+
+
+![png](README_files/README_91_24.png)
+
+
+
+![png](README_files/README_91_25.png)
+
+
+
+![png](README_files/README_91_26.png)
+
+
+
+```python
+for station in df['station_name'].unique():
+    fig, ax = plt.subplots(figsize=(16,10))
+    sns.lineplot(x='time', y='available_bikes', data=df[(df['station_name'] == station) & (df['day_type'] == 'weekend')], hue='is_raining').set_title(station)
+    plt.xticks(df['time'].unique(), rotation=90)
+    plt.show()
+```
+
+
+![png](README_files/README_92_0.png)
+
+
+
+![png](README_files/README_92_1.png)
+
+
+
+![png](README_files/README_92_2.png)
+
+
+
+![png](README_files/README_92_3.png)
+
+
+
+![png](README_files/README_92_4.png)
+
+
+
+![png](README_files/README_92_5.png)
+
+
+
+![png](README_files/README_92_6.png)
+
+
+
+![png](README_files/README_92_7.png)
+
+
+
+![png](README_files/README_92_8.png)
+
+
+
+![png](README_files/README_92_9.png)
+
+
+
+![png](README_files/README_92_10.png)
+
+
+
+![png](README_files/README_92_11.png)
+
+
+
+![png](README_files/README_92_12.png)
+
+
+
+![png](README_files/README_92_13.png)
+
+
+
+![png](README_files/README_92_14.png)
+
+
+
+![png](README_files/README_92_15.png)
+
+
+
+![png](README_files/README_92_16.png)
+
+
+
+![png](README_files/README_92_17.png)
+
+
+
+![png](README_files/README_92_18.png)
+
+
+
+![png](README_files/README_92_19.png)
+
+
+
+![png](README_files/README_92_20.png)
+
+
+
+![png](README_files/README_92_21.png)
+
+
+
+![png](README_files/README_92_22.png)
+
+
+
+![png](README_files/README_92_23.png)
+
+
+
+![png](README_files/README_92_24.png)
+
+
+
+![png](README_files/README_92_25.png)
+
+
+
+![png](README_files/README_92_26.png)
+
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df[(df['day_type'] == 'weekday')], hue='is_raining')
+plt.xticks(df['time'].unique(), rotation=90)
+plt.show()
+```
+
+
+![png](README_files/README_93_0.png)
+
+
+
+```python
+df['date'] = df['time_hour'].apply(lambda x: x.date())
+df['is_raining'] = df['is_raining'].apply(lambda x: int(x))
+df_rainy_days = df.groupby(['station_id', 'date'])['is_raining'].max().reset_index()
+```
+
+
+```python
+df_rainy_days.rename(columns={'is_raining': 'rainy_day'}, inplace=True)
+```
+
+
+```python
+df_rainy_days.head()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>station_id</th>
+      <th>date</th>
+      <th>rainy_day</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>150</td>
+      <td>2019-05-02</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>150</td>
+      <td>2019-05-03</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>150</td>
+      <td>2019-05-04</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>150</td>
+      <td>2019-05-05</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>150</td>
+      <td>2019-05-06</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+df = df.merge(df_rainy_days, on=['station_id', 'date'])
+```
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df[(df['day_type'] == 'weekday')], hue='rainy_day')
+plt.xticks(df['time'].unique(), rotation=90)
+plt.show()
+```
+
+
+![png](README_files/README_98_0.png)
+
+
+
+```python
+fig, ax = plt.subplots(figsize=(16,10))
+sns.lineplot(x='time', y='available_bikes', data=df[(df['day_type'] == 'weekend')], hue='rainy_day')
+plt.xticks(df['time'].unique(), rotation=90)
+plt.show()
+```
+
+
+![png](README_files/README_99_0.png)
+
+
 Auto-Generate README.md:
 
 
@@ -1290,7 +1817,120 @@ Auto-Generate README.md:
     [NbConvertApp] Making directory ../README_files
     [NbConvertApp] Making directory ../README_files
     [NbConvertApp] Making directory ../README_files
-    [NbConvertApp] Writing 44131 bytes to ../README.md
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Making directory ../README_files
+    [NbConvertApp] Writing 59166 bytes to ../README.md
 
 
 [Powered by Dark Sky](https://darksky.net/poweredby/)
