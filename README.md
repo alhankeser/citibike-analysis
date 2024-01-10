@@ -1,9 +1,11 @@
+_This project was completed a while ago and does not reflect my current level of knowledge in this domain._
+
 
 # Extracting and Transforming Citi Bike Data for Analysis 
 ## How is Citi Bike availability affected by various factors like time of day and weather?
 
 ### Who:
-I am [Alhan Keser](https://blog.alhan.co/), a [10+ year specialist in Web Experimentation](https://www.linkedin.com/in/alhankeser/) (aka A/B Testing, Conversion Optimization), on my way to a Master's in Data Science.
+I am [Alhan Keser](https://blog.alhan.co/), a [10+ year specialist in Web Experimentation](https://www.linkedin.com/in/alhankeser/) (aka A/B Testing, Conversion Optimization).
 
 ### What:
 This is an original analysis of Citi Bike station data from May-June 2019 to find out what affect the day of week, time of day, and weather (temperature, precipitation, etc...) have on the availability of bikes at station-,  neighborhood-, and borough-levels. 
